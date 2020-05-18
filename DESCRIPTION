@@ -11,6 +11,7 @@ Description: A lightweight `R` package to visualize large raster time series, bu
 License: GPL-3
 Encoding: UTF-8
 Imports:
+  ggplot2, 
   raster,
   stats
 BugReports: http://www.github.com/16eagle/rtsVis/issues

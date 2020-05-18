@@ -112,6 +112,63 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 }
 
 
+#' plot raster as ggplot
+#' @importFrom raster ncell
+#' @importFrom ggplot2 ggplot geom_tile geom_raster aes_string scale_fill_identity
+#' @noRd 
+gg.bmap <- function(r, r_type, gglayer = F, ...){
+  extras <- list(...)
+  if(!is.null(extras$maxpixels)) maxpixels <- extras$maxpixels else maxpixels <- 500000
+  if(!is.null(extras$alpha)) alpha <- extras$alpha else alpha <- 1
+  if(!is.null(extras$maxColorValue)) maxColorValue <- extras$maxColorValue else maxColorValue <- NA
+  
+  # aggregate raster if too large
+  if(maxpixels < ncell(r)) r <- aggregate(r, fact = ceiling(ncell(r)/maxpixels))
+  
+  # transform into data.frame
+  df <- data.frame(raster::as.data.frame(r, xy = T))
+  colnames(df) <- c("x", "y", paste0("val", 1:(ncol(df)-2)))
+  
+  # factor if discrete to show categrocial legend
+  df$fill <- df$val1
+  if(r_type == "discrete") df$fill <- as.factor(df$fill)
+  
+  # transform to RGB colours
+  if(r_type == "RGB"){
+    if(is.na(maxColorValue)) maxColorValue <- max(c(df$val1, df$val2, df$val3), na.rm = T)
+    
+    if(maxColorValue < max(c(df$val1, df$val2, df$val3), na.rm = T)){
+      out("maxColorValue < maximum raster value. maxColorValue is set to maximum raster value.", type = 2)
+      maxColorValue <- max(c(df$val1, df$val2, df$val3), na.rm = T)
+    }
+    
+    # remove NAs
+    na.sel <- is.na(df$val1) & is.na(df$val2) & is.na(df$val3)
+    if(any(na.sel)) df <- df[!na.sel,]
+    
+    df$fill <- grDevices::rgb(red = df$val1, green = df$val2, blue = df$val3, maxColorValue = maxColorValue)
+  } else{
+    
+    # remove NAs
+    na.sel <- is.na(df$val1)
+    if(any(na.sel)) df <- df[!na.sel,]
+  }
+  # if NA gaps are there, use geom_tile, otherwise make it fast using geom_raster
+  if(any(na.sel)){
+    gg <- geom_tile(aes_string(x = "x", y = "y", fill = "fill"), data = df, alpha = alpha)
+  } else{
+    gg <- geom_raster(aes_string(x = "x", y = "y", fill = "fill"), data = df, alpha = alpha)
+  }
+  
+  if(isFALSE(gglayer)){
+    gg <- ggplot() + gg
+    if(r_type == "RGB") gg <- gg + scale_fill_identity() 
+  }
+  return(gg)
+}
+
+
+
 #' assign raster to frames
 #' @importFrom raster nlayers crop extent brick writeRaster dataType
 #' @noRd
@@ -189,4 +246,39 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
     options(rtsVis.dir_frames = paste0(tempdir(), "/rtsVis"))
     if(!dir.exists(getOption("rtsVis.dir_frames"))) dir.create(getOption("rtsVis.dir_frames"))
   }
+}
+
+
+ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
+  #get quantiles for one image
+  minq <- max(0,minq)
+  maxq <- min(1,maxq)
+  stopifnot(minq < maxq)
+  
+  if ((minq==0 & maxq==1) & raster:::.haveMinMax(x)) {
+    q <- cbind(minValue(x), maxValue(x))
+  } else {
+    if (samplesize[1] < ncell(x)) {
+      stopifnot(samplesize[1] > 1) 
+      y <- sampleRegular(x, samplesize, asRaster=TRUE)
+      q <- quantile(y, c(minq, maxq), na.rm=TRUE)
+    } else {
+      q <- quantile(x, c(minq, maxq), na.rm=TRUE)
+    }
+  }
+}
+
+
+
+ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
+  rs_qs <- t(do.call(cbind, lapply(unstack(x),FUN =  ts_get_layer_quantiles,minq=minq,maxq=maxq,samplesize=samplesize)))
+  return(rs_qs)
+}
+
+ts_get_ts_quantiles <- function(ts,minq=0.02,maxq=0.98,samplesize=100000){
+  if(minq==0){minq <- 0.000001} #This prevents weird things from occasionally happening with NAs (unknown cause)
+  qs <- sapply(ts,ts_get_stack_quantiles,simplify="array",minq=minq,maxq=maxq,samplesize=samplesize)
+  maxqs <- apply(qs[,2,], MARGIN = 1,max)
+  minqs <- apply(qs[,1,], MARGIN = 1,min)
+  return(as.data.frame(cbind(minqs,maxqs)))
 }
