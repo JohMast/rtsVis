@@ -5,13 +5,15 @@ Version: 0.0.1
 Depends:
   R (>= 3.5.0)
 Date: 2020-05-01
-Authors@R: c(person("Johannes", "Mast", role = c("aut", "cre"), email = "johannes.mast@gmx.de"),
+Authors@R: c(person("Johannes", "Mast", role = c("aut", "cre"), email = "johannes.mast@gmx.de", comment = c(ORCID = "0000-0001-6595-5834")),
              person("Jakob", "Schwalb-Willmann", email = "movevis@schwalb-willmann.de", role = c("aut"), comment = c(ORCID = "0000-0003-2665-1509")))
 Description: A lightweight `R` package to visualize large raster time series, building on a fast temporal interpolation core.
 License: GPL-3
 Encoding: UTF-8
 Imports:
-  ggplot2, 
+  ggplot2,
+  RStoolbox,
+  moveVis,
   raster,
   stats
 BugReports: http://www.github.com/16eagle/rtsVis/issues

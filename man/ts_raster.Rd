@@ -2,7 +2,7 @@
 % Please edit documentation in R/ts_raster.R
 \name{ts_raster}
 \alias{ts_raster}
-\title{Create a raster time series}
+\title{Assemble/interpolate a raster time series}
 \usage{
 ts_raster(r_list, r_times, out_times = NA, fade_raster = F, ..., verbose = T)
 }
@@ -23,5 +23,5 @@ ts_raster(r_list, r_times, out_times = NA, fade_raster = F, ..., verbose = T)
 
 }
 \description{
-This function creates a raster time series by assigning or interpolating input rasters per time stamp.
+This function assembles a raster time series by assigning or interpolating input rasters to a target time series.
 }

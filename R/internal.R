@@ -116,7 +116,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' @importFrom raster ncell
 #' @importFrom ggplot2 ggplot geom_tile geom_raster aes_string scale_fill_identity
 #' @noRd 
-gg.bmap <- function(r, r_type, gglayer = F, ...){
+.gg.bmap <- function(r, r_type, gglayer = F, ...){
   extras <- list(...)
   if(!is.null(extras$maxpixels)) maxpixels <- extras$maxpixels else maxpixels <- 500000
   if(!is.null(extras$alpha)) alpha <- extras$alpha else alpha <- 1
@@ -248,7 +248,18 @@ gg.bmap <- function(r, r_type, gglayer = F, ...){
   }
 }
 
-
+#Could probably be substituted by raster::quantile
+#but as raster::stretch uses the method below, we stick with this one
+#' ts_get_layer_quantiles
+#' @description Takes regular samples from a single rasterlayer and determines the quantiles
+#' @param x a raster layer
+#' @param minq Lower quantile to be determined
+#' @param maxq Upper quantile to be determined
+#' @param samplesize Number of samples to take
+#' @importFrom raster haveMinMax sampleRegular
+#' @return a named vector of the minimum and maximum value (corresponding to minq and maxq)
+#'
+#' @examples
 ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
   #get quantiles for one image
   minq <- max(0,minq)
@@ -268,17 +279,90 @@ ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
   }
 }
 
-
-
+#could probably be substituted by raster::quantile as in:
+#cellStats(x, stat=raster::quantile,ncells=100000,probs=c(0.01,0.99))
+#' ts_get_stack_quantiles
+#' @description Takes regular samples from a single rasterstack and determines the quantiles for every layer
+#' @param x a raster stack
+#' @param minq Lower quantile to be determined
+#' @param maxq Upper quantile to be determined
+#' @param samplesize Number of samples to take
+#' @return a matrix of n_layers*2, one min and one max bound for every layer
+#' 
 ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
   rs_qs <- t(do.call(cbind, lapply(unstack(x),FUN =  ts_get_layer_quantiles,minq=minq,maxq=maxq,samplesize=samplesize)))
   return(rs_qs)
 }
 
+#2do: Make this choose ts_get_layer quantiles for single layers (if this is necessary, and ts_get_stack_quantiles breaks for single layers)
+#' ts_get_ts_quantiles
+#'
+#' @param ts a list of raster stacks
+#' @param minq Lower quantile to be determined
+#' @param maxq Upper quantile to be determined
+#' @param samplesize Number of samples to take
+#' @return a matrix of n_layers*2, one min and one max bound for every layer, which is the min and the max respectively of all the rasters for that layer index
 ts_get_ts_quantiles <- function(ts,minq=0.02,maxq=0.98,samplesize=100000){
   if(minq==0){minq <- 0.000001} #This prevents weird things from occasionally happening with NAs (unknown cause)
   qs <- sapply(ts,ts_get_stack_quantiles,simplify="array",minq=minq,maxq=maxq,samplesize=samplesize)
   maxqs <- apply(qs[,2,], MARGIN = 1,max)
   minqs <- apply(qs[,1,], MARGIN = 1,min)
   return(as.data.frame(cbind(minqs,maxqs)))
+}
+
+#' ts_stretch
+#' @description Stretch and clips a raster(stack) from within a certain source range determined by min quantile and max quantile to a target range ymin to ymax
+#' @param x a raster to be stretched
+#' @param minqs Lower quantile 
+#' @param maxqs Higher quantile 
+#' @param ymin target min value
+#' @param ymax target max value
+#' @importFrom RStoolbox rescaleImage
+#' @importFrom raster clamp
+#' @return A raster with values between ymin and ymax
+
+ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
+  raster::clamp(
+    RStoolbox::rescaleImage(x,
+                            xmin = minqs,
+                            xmax = maxqs,
+                            ymin = ymin,
+                            ymax = ymax,
+                            forceMinMax = T),
+    ymin,ymax)
+}
+
+
+#' ts_stretch_list
+#' @description Stretch and clips a list of raster(stacks) from within a certain source range determined by min quantile and max quantile to a target range ymin to ymax. The quantiles are determined for each layer individually but across all rasters of the inputlist
+#' @param x_list a list of rasters to be stretched
+#' @param minqs Lower quantile 
+#' @param maxqs Higher quantile 
+#' @param ymin target min value
+#' @param ymax target max value
+#' @return A list of raster(stacks) with values between ymin and ymax
+ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0){
+  ts_quantiles <- ts_get_ts_quantiles(x_list,minq = minq,maxq = maxq,samplesize = 98765)
+  out <- lapply(x_list,ts_stretch,minqs = ts_quantiles$minqs,maxqs = ts_quantiles$maxqs,ymin = 0,ymax = 1)
+  .ts_set_frametimes(out,.ts_get_frametimes(x_list))
+}
+
+#' .ts_makeframes
+#' @param x_list a list of rasters
+#' @param r_type one of "discrete","gradient", "RGB"
+#' @return a list of ggplots, carrying over the "time" attribute of x_list set
+.ts_makeframes <- function(x_list,r_type="RGB"){
+  out <- lapply(x_list, .gg.bmap,r_type=r_type)
+  .ts_set_frametimes(out,.ts_get_frametimes(x_list))
+}
+
+#' .ts_update_NA_util
+#'
+#' @param x a raster object
+#' @param new_na Value to replace the old one as NA
+#'
+#' @return The modified raster object, with the new NA value set
+.ts_update_NA_util <- function(x,new_na){
+  NAvalue(x) <- new_na
+  return(x)
 }
