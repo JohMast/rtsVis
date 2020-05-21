@@ -288,7 +288,6 @@ ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
 #' @param maxq Upper quantile to be determined
 #' @param samplesize Number of samples to take
 #' @return a matrix of n_layers*2, one min and one max bound for every layer
-#' 
 ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
   rs_qs <- t(do.call(cbind, lapply(unstack(x),FUN =  ts_get_layer_quantiles,minq=minq,maxq=maxq,samplesize=samplesize)))
   return(rs_qs)
@@ -296,7 +295,6 @@ ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
 
 #2do: Make this choose ts_get_layer quantiles for single layers (if this is necessary, and ts_get_stack_quantiles breaks for single layers)
 #' ts_get_ts_quantiles
-#'
 #' @param ts a list of raster stacks
 #' @param minq Lower quantile to be determined
 #' @param maxq Upper quantile to be determined
@@ -320,7 +318,6 @@ ts_get_ts_quantiles <- function(ts,minq=0.02,maxq=0.98,samplesize=100000){
 #' @importFrom RStoolbox rescaleImage
 #' @importFrom raster clamp
 #' @return A raster with values between ymin and ymax
-
 ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
   raster::clamp(
     RStoolbox::rescaleImage(x,
@@ -341,8 +338,8 @@ ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
 #' @param ymin target min value
 #' @param ymax target max value
 #' @return A list of raster(stacks) with values between ymin and ymax
-ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0){
-  ts_quantiles <- ts_get_ts_quantiles(x_list,minq = minq,maxq = maxq,samplesize = 98765)
+ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize = 10000){
+  ts_quantiles <- ts_get_ts_quantiles(x_list,minq = minq,maxq = maxq,samplesize = samplesize)
   out <- lapply(x_list,ts_stretch,minqs = ts_quantiles$minqs,maxqs = ts_quantiles$maxqs,ymin = 0,ymax = 1)
   .ts_set_frametimes(out,.ts_get_frametimes(x_list))
 }
@@ -365,4 +362,53 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0){
 .ts_update_NA_util <- function(x,new_na){
   NAvalue(x) <- new_na
   return(x)
+}
+
+
+#' .blacken_NA_util
+#' @param x A list of raster objects 
+#' @return a raster object with NAs replaced by 0
+#' lapply(r_list_out_stretched,FUN = rtsVis:::.blacken_NAs
+.blacken_NA_util <- function(x_list){
+  out <- lapply(x_list,FUN = function(y){
+    y[is.na(y[])] <- 0 
+    return(y)
+  })
+  #carry over the frame times
+  .ts_set_frametimes(out,.ts_get_frametimes(x_list))
+}
+
+
+#' ts_guess_raster_type
+#' @description Attempts to determine the raster type of the input raster, to be used for other functions in the rtsVis package.
+#' @param x A raster object
+#' @return
+#' @importFrom raster sampleRandom
+.ts_guess_raster_type <- function(x){
+  print("Guessing raster type.")
+  if(nlayers(x) >= 3 ){
+    r_type <-"RGB"
+    print("Detected 3+ layers, choosing raster type 'RGB'")
+  }else if(nlayers(x) != 3 && length(unique(sampleRandom(x,100)))>=50){
+    r_type <-"gradient"
+    print("Detected more than 50/100 unique values, choosing raster type 'gradient'")
+  }else if(nlayers(x) != 3 && length(unique(sampleRandom(x,100)))<50){
+    r_type <-"discrete"
+    print("Detected fewer than 50/100 unique values, choosing raster type 'discrete'")
+  }else{
+    stop("Could not determine raster type.")
+  }
+  return(r_type)
+}
+
+#' .ts_subset_ts_util
+#' @param x_list a list of raster objects
+#' @param l_indices a vector of indices to select from each object
+#' @return a list of raster objects, each subset by l_indices
+.ts_subset_ts_util <- function(x_list,l_indices=1){
+  x_list <- lapply(x_list, function(x){
+    x[[l_indices]]
+  }
+  )
+  return(x_list)
 }
