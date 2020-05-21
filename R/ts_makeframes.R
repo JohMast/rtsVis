@@ -31,9 +31,9 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
   #Performing stretch, but dont quantile stretch discrete rtypes
   if(r_type=="discrete"){
    # ts_quantiles <- ts_get_ts_quantiles(x_list,minq = minq,maxq = maxq,samplesize = samplesize)
-    r_list_out_stretched <- rtsVis:::ts_stretch_list(x_list = x_list,minq = 0,maxq = 1,samplesize = samplesize)
+    r_list_out_stretched <- ts_stretch_list(x_list = x_list,minq = 0,maxq = 1,samplesize = samplesize)
   }else{
-    r_list_out_stretched <- rtsVis:::ts_stretch_list(x_list = x_list,minq = minq,maxq = maxq,samplesize = samplesize)
+    r_list_out_stretched <- ts_stretch_list(x_list = x_list,minq = minq,maxq = maxq,samplesize = samplesize)
   }
   
   #Replace NA with 0 if necessary (this can prevent error: "Farbintensität nan nicht in [0, 1]")
@@ -42,6 +42,6 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
   }
   
   #make the plots
-  r_ggplots <- rtsVis:::.ts_makeframes(x_list = r_list_out_stretched,r_type = r_type)
+  r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type)
 }
 
