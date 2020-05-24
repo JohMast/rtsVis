@@ -412,3 +412,18 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   )
   return(x_list)
 }
+
+
+.ts_approx_na <- function(x_list){
+  for(n_l in 1:nlayers(x_list[[1]])){
+    #make a brick from all the layers
+    x_lay <- rtsVis:::.ts_subset_ts_util(x_list,n_l) %>% stack()
+    #fill the nas
+    x_lay_filled <- approxNA(x_lay)
+    #reassign the filled layers to the list elements
+    for(n_r in 1:length(x_list)){
+      x_list[[n_r]][[n_l]] <- x_lay_filled[[n_r]]
+    }
+    return(x_list)
+  }
+}
