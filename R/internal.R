@@ -256,7 +256,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' @param minq Lower quantile to be determined
 #' @param maxq Upper quantile to be determined
 #' @param samplesize Number of samples to take
-#' @importFrom raster haveMinMax sampleRegular
+#' @importFrom raster sampleRegular
 #' @return a named vector of the minimum and maximum value (corresponding to minq and maxq)
 #'
 #' @examples
@@ -402,6 +402,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 }
 
 #' .ts_subset_ts_util
+#' 
+#' @noRd 
 #' @param x_list a list of raster objects
 #' @param l_indices a vector of indices to select from each object
 #' @return a list of raster objects, each subset by l_indices
@@ -414,16 +416,108 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 }
 
 
-.ts_approx_na <- function(x_list){
-  for(n_l in 1:nlayers(x_list[[1]])){
-    #make a brick from all the layers
-    x_lay <- rtsVis:::.ts_subset_ts_util(x_list,n_l) %>% stack()
-    #fill the nas
-    x_lay_filled <- approxNA(x_lay)
-    #reassign the filled layers to the list elements
-    for(n_r in 1:length(x_list)){
-      x_list[[n_r]][[n_l]] <- x_lay_filled[[n_r]]
-    }
-    return(x_list)
+#' .ts_extract_from_frames
+#' @noRd 
+#' @param r_list_extract A list of rasters to extract values from. Need to have frame times set so they can be extracted by .ts_get_frametimes
+#' @param positions Positions from where to extract values. Can be a Two-column matrix, a spatialpoints, or spatialpolygons. If none are provided, values are extracted for the entire raster using raster::cellstats
+#' @param position_names (Optional) A vector of length positions, giving the names of the position objects
+#' @param FUN A function to apply to summarize the values per position object. Default is mean.
+#'
+#' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
+#' @importFrom tidyr pivot_longer
+#' @examples
+.ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,FUN=mean){
+  #2do: make it take a function
+  frametimes <- .ts_get_frametimes(r_list_out)
+  assertthat::assert_that(length(r_list_out)==length(frametimes))
+  
+  extr_df <- lapply(names(r_list_extract),
+                    function(x) {
+                      if(inherits(positions,"SpatialPointsDataFrame")){
+                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)%>% as.data.frame()
+                        extr_df$lon <- coordinates(positions)[, 1]
+                        extr_df$lat <- coordinates(positions)[, 2]
+                        if(!is.null(object_names)){
+                          extr_df$object_name <- position_names
+                        }else{
+                          extr_df$object_name <- paste("Point", 1:nrow(positions))
+                        }
+                        
+                      }else if(inherits(positions,"SpatialPolygonsDataFrame")){
+                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)%>% as.data.frame()
+                        extr_df$lon <- coordinates(positions)[, 1]
+                        extr_df$lat <- coordinates(positions)[, 2]
+                        if(!is.null(position_names)){
+                          extr_df$object_name <- position_names
+                        }else{
+                          extr_df$object_name <-paste("Polygon" ,(1:nrow(positions)))
+                        }
+                      }else if(inherits(positions,c("matrix","array"))){
+                        assertthat::assert_that(ncol(positions)==2)
+                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN) %>% as.data.frame()
+                        extr_df$lon <- positions[, 1]
+                        extr_df$lat <- positions[, 2]
+                        if(!is.null(position_names)){
+                          extr_df$object_name <- position_names
+                        }else{
+                          extr_df$object_name <- paste("Point", 1:nrow(positions))
+                        }
+                      }else{
+                        extr_df <- raster::cellStats(r_list_extract[[x]],FUN) %>% matrix(nrow = 1,byrow = T) %>% as.data.frame()
+                        extr_df$lon <- mean(extent(r_list_extract[[x]])[1:2])
+                        extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
+                        extr_df$object_name <- "AOI"
+                      }
+                      names(extr_df) <-
+                        c(paste0("Band", 1:(nlayers(r_list_extract[[x]]))), "centr_lon", "centr_lat","object_name")
+                      extr_df$time <- frametimes[as.integer(x)]
+                      
+                      return(extr_df)
+                    }) %>% 
+    do.call(rbind,.)
+  extr_df$frame <- as.numeric(as.factor(extr_df$time))
+  return(extr_df %>% tidyr::pivot_longer(cols =  starts_with("Band")) )
+}
+
+
+
+#' flow stats plot function
+#' Stolen from MoveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe, as provided by)
+#' @noRd 
+#' @param pos_df A dataframe 
+#' @param path_legend 
+#' @param path_legend_title 
+#' @param path_size 
+#' @param val_seq 
+#'
+#' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
+#' @noRd
+.ts_gg_flow <- function(pos_df, path_legend, path_legend_title, path_size, val_seq){
+  
+  ## stats plot function
+  gg.fun <- function(x, y, pl, plt, ps, vs){
+    
+    ## generate base plot
+    p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
+      geom_path( size = ps, show.legend = F)+  
+      coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      scale_y_continuous(expand = c(0,0), breaks = vs) 
+    
+    ## add legend
+    #2DO: Implement option to see legend and manually set colors
+    if(isTRUE(pl)){
+      #l.df <- cbind.data.frame(frame = x[1,]$frame, value = x[1,]$value, name = levels(as.factor(y$name)),
+      #                         colour = as.character(y$colour[sapply(as.character(unique(y$name)), function(x) match(x, y$name)[1] )]), stringsAsFactors = F)
+      #l.df$name <- factor(l.df$name, levels = l.df$name)
+      #l.df <- rbind(l.df, l.df)
+      #p <- p+ scale_colour_manual()
+    }  
+    return(p)
   }
+  
+  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq){
+    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq)
+  })
 }

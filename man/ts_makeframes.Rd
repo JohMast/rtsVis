@@ -6,10 +6,12 @@
 \usage{
 ts_makeframes(
   x_list,
-  r_type = "RGB",
+  r_type = NULL,
   minq = 0.02,
   maxq = 0.98,
-  samplesize = 1000
+  samplesize = 1000,
+  blacken_NA = F,
+  l_indices = NULL
 )
 }
 \arguments{
