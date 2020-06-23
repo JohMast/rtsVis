@@ -1,4 +1,4 @@
-#' ts_makeframes
+#' Create Spatial Plots of a raster time series
 #'
 #' @param x_list A list of rasters.
 #' @param r_type one of "discrete","gradient", "RGB"
