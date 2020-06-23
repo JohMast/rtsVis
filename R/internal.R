@@ -495,19 +495,30 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param val_seq 
 #' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
 #' @noRd
-.ts_gg_flow <- function(pos_df, path_legend, path_legend_title, path_size, val_seq){
+.ts_gg_flow <- function(pos_df, path_legend, path_legend_title, path_size, val_seq, position_colors){
   
   ## stats plot function
-  gg.fun <- function(x, y, pl, plt, ps, vs){
+  gg.fun <- function(x, y, pl, plt, ps, vs,pcols){
     
     ## generate base plot
-    p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
-      geom_path( size = ps, show.legend = F)+  
-      coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
-      theme_bw() + 
-      theme(aspect.ratio = 1) +
-      scale_y_continuous(expand = c(0,0), breaks = vs) 
-    
+
+    if(!is.null(pcols)){
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
+        geom_path( size = ps, show.legend = F)+  
+        coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+        theme_bw() + 
+        theme(aspect.ratio = 1) +
+        scale_y_continuous(expand = c(0,0), breaks = vs)+
+        scale_colour_manual(values = pcols)
+    }else{
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
+        geom_path( size = ps, show.legend = F)+  
+        coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+        theme_bw() + 
+        theme(aspect.ratio = 1) +
+        scale_y_continuous(expand = c(0,0), breaks = vs) 
+    }
+
     ## add legend
     #2DO: Implement option to see legend and manually set colors
     if(isTRUE(pl)){
@@ -520,7 +531,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     return(p)
   }
   
-  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq){
-    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq)
+  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq,pcols=position_colors){
+    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq,pcols=position_colors)
   })
 }

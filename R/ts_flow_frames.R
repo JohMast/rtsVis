@@ -12,7 +12,7 @@
 #'
 #' @return
 #' @export
-ts_flow_frames <- function(r_list,positions,position_names=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,path_legend=T,path_legend_title="Positions"){
+ts_flow_frames <- function(r_list,positions,position_names=NULL,position_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,path_legend=T,path_legend_title="Positions"){
   ## extract the values of the raster into a long dataframe
   extract_df <- rtsVis:::.ts_extract_from_frames(r_list_extract = r_list,
                                                 positions = positions,
@@ -36,6 +36,7 @@ ts_flow_frames <- function(r_list,positions,position_names=NULL,val_min=NULL,val
                                       path_legend = path_legend,
                                       path_legend_title = path_legend_title,
                                       path_size =  path_size,
-                                      val_seq = val_seq)
+                                      val_seq = val_seq,
+                                      position_colors=position_colors)
   return(flow_frames)
 }
