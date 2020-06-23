@@ -258,8 +258,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' @param samplesize Number of samples to take
 #' @importFrom raster sampleRegular
 #' @return a named vector of the minimum and maximum value (corresponding to minq and maxq)
-#'
-#' @examples
+#' @noRd
 ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
   #get quantiles for one image
   minq <- max(0,minq)
@@ -288,6 +287,7 @@ ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
 #' @param maxq Upper quantile to be determined
 #' @param samplesize Number of samples to take
 #' @return a matrix of n_layers*2, one min and one max bound for every layer
+#' @noRd
 ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
   rs_qs <- t(do.call(cbind, lapply(unstack(x),FUN =  ts_get_layer_quantiles,minq=minq,maxq=maxq,samplesize=samplesize)))
   return(rs_qs)
@@ -300,6 +300,7 @@ ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
 #' @param maxq Upper quantile to be determined
 #' @param samplesize Number of samples to take
 #' @return a matrix of n_layers*2, one min and one max bound for every layer, which is the min and the max respectively of all the rasters for that layer index
+#' @noRd
 ts_get_ts_quantiles <- function(ts,minq=0.02,maxq=0.98,samplesize=100000){
   if(minq==0){minq <- 0.000001} #This prevents weird things from occasionally happening with NAs (unknown cause)
   qs <- sapply(ts,ts_get_stack_quantiles,simplify="array",minq=minq,maxq=maxq,samplesize=samplesize)
@@ -318,6 +319,7 @@ ts_get_ts_quantiles <- function(ts,minq=0.02,maxq=0.98,samplesize=100000){
 #' @importFrom RStoolbox rescaleImage
 #' @importFrom raster clamp
 #' @return A raster with values between ymin and ymax
+#' @noRd
 ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
   raster::clamp(
     RStoolbox::rescaleImage(x,
@@ -338,6 +340,7 @@ ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
 #' @param ymin target min value
 #' @param ymax target max value
 #' @return A list of raster(stacks) with values between ymin and ymax
+#' @noRd
 ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize = 10000){
   ts_quantiles <- ts_get_ts_quantiles(x_list,minq = minq,maxq = maxq,samplesize = samplesize)
   out <- lapply(x_list,ts_stretch,minqs = ts_quantiles$minqs,maxqs = ts_quantiles$maxqs,ymin = 0,ymax = 1)
@@ -348,6 +351,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param x_list a list of rasters
 #' @param r_type one of "discrete","gradient", "RGB"
 #' @return a list of ggplots, carrying over the "time" attribute of x_list set
+#' @noRd
 .ts_makeframes <- function(x_list,r_type="RGB"){
   out <- lapply(x_list, .gg.bmap,r_type=r_type)
   .ts_set_frametimes(out,.ts_get_frametimes(x_list))
@@ -357,8 +361,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #'
 #' @param x a raster object
 #' @param new_na Value to replace the old one as NA
-#'
 #' @return The modified raster object, with the new NA value set
+#' @noRd
 .ts_update_NA_util <- function(x,new_na){
   NAvalue(x) <- new_na
   return(x)
@@ -368,7 +372,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' .blacken_NA_util
 #' @param x A list of raster objects 
 #' @return a raster object with NAs replaced by 0
-#' lapply(r_list_out_stretched,FUN = rtsVis:::.blacken_NAs
+#' @noRd
 .blacken_NA_util <- function(x_list){
   out <- lapply(x_list,FUN = function(y){
     y[is.na(y[])] <- 0 
@@ -384,6 +388,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param x A raster object
 #' @return
 #' @importFrom raster sampleRandom
+#' @noRd
 .ts_guess_raster_type <- function(x){
   print("Guessing raster type.")
   if(nlayers(x) >= 3 ){
@@ -402,11 +407,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 }
 
 #' .ts_subset_ts_util
-#' 
 #' @noRd 
 #' @param x_list a list of raster objects
 #' @param l_indices a vector of indices to select from each object
 #' @return a list of raster objects, each subset by l_indices
+#' @noRd
 .ts_subset_ts_util <- function(x_list,l_indices=1){
   x_list <- lapply(x_list, function(x){
     x[[l_indices]]
@@ -422,10 +427,9 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param positions Positions from where to extract values. Can be a Two-column matrix, a spatialpoints, or spatialpolygons. If none are provided, values are extracted for the entire raster using raster::cellstats
 #' @param position_names (Optional) A vector of length positions, giving the names of the position objects
 #' @param FUN A function to apply to summarize the values per position object. Default is mean.
-#'
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
-#' @examples
+#' @noRd
 .ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,FUN=mean){
   #2do: make it take a function
   frametimes <- .ts_get_frametimes(r_list_out)
@@ -489,7 +493,6 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param path_legend_title 
 #' @param path_size 
 #' @param val_seq 
-#'
 #' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
 #' @noRd
 .ts_gg_flow <- function(pos_df, path_legend, path_legend_title, path_size, val_seq){

@@ -1,11 +1,9 @@
 #' Fill NA values in a raster time series
 #'
 #' @param x_list_fill 
-#'
 #' @return
 #' @export
-#'
-#' @examples
+
 ts_fill_na <- function(x_list_fill){
   for(n_l in 1:nlayers(x_list_fill[[1]])){
     print(paste0("Filling Layer:",n_l))

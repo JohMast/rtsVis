@@ -20,7 +20,7 @@
 #' frames.ts <- get_frametimes(frames)
 #' print(frames.ts)
 #' }
-#' 
+#' @noRd 
 #' @seealso \code{\link{frames_spatial}} \code{\link{frames_graph}}
 #' @export
 

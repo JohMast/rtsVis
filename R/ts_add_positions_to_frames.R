@@ -1,13 +1,10 @@
 #' Add points, coordinates, or polygons to a list of spatial plots
-#'
 #' @param r_frame_list 
 #' @param positions 
 #' @param position_names 
-#'
 #' @return
 #' @export
-#'
-#' @examples
+
 ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL){
   
   if(inherits(positions,"SpatialPolygonsDataFrame")){
