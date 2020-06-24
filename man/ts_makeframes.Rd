@@ -2,7 +2,7 @@
 % Please edit documentation in R/ts_makeframes.R
 \name{ts_makeframes}
 \alias{ts_makeframes}
-\title{ts_makeframes}
+\title{Create Spatial Plots of a raster time series}
 \usage{
 ts_makeframes(
   x_list,
@@ -29,5 +29,5 @@ ts_makeframes(
 A list of ggplots
 }
 \description{
-ts_makeframes
+Create Spatial Plots of a raster time series
 }

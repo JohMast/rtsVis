@@ -8,12 +8,16 @@ ts_flow_frames(
   r_list,
   positions,
   position_names = NULL,
+  band_names = NULL,
+  position_colors = NULL,
   val_min = NULL,
   val_max = NULL,
   val_by = 0.1,
   path_size = 1,
-  path_legend = T,
-  path_legend_title = "Positions"
+  position_legend = T,
+  band_legend = T,
+  band_legend_title = "Bands",
+  position_legend_title = "Positions"
 )
 }
 \arguments{

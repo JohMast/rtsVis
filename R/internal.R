@@ -430,7 +430,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
 #' @noRd
-.ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,FUN=mean){
+.ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean){
   #2do: make it take a function
   frametimes <- .ts_get_frametimes(r_list_out)
   assertthat::assert_that(length(r_list_out)==length(frametimes))
@@ -472,15 +472,21 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
                         extr_df$object_name <- "AOI"
                       }
+                      if(is.null(band_names)){
+                        band_names <- paste0("Band",1:(nlayers(r_list_extract[[x]])))  #make artificial bandnames if necessary
+                      }
+
                       names(extr_df) <-
-                        c(paste0("Band", 1:(nlayers(r_list_extract[[x]]))), "centr_lon", "centr_lat","object_name")
+                        c(band_names , "centr_lon", "centr_lat","object_name")
                       extr_df$time <- frametimes[as.integer(x)]
                       
                       return(extr_df)
                     }) %>% 
     do.call(rbind,.)
   extr_df$frame <- as.numeric(as.factor(extr_df$time))
-  return(extr_df %>% tidyr::pivot_longer(cols =  starts_with("Band")) )
+  out <- extr_df %>% tidyr::pivot_longer(cols =  band_names) 
+  
+  return(out)
 }
 
 
@@ -490,48 +496,48 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @noRd 
 #' @param pos_df A dataframe 
 #' @param path_legend 
-#' @param path_legend_title 
+#' @param band_legend_title 
 #' @param path_size 
 #' @param val_seq 
 #' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
 #' @noRd
-.ts_gg_flow <- function(pos_df, path_legend, path_legend_title, path_size, val_seq, position_colors){
+.ts_gg_flow <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq, position_colors){
   
   ## stats plot function
-  gg.fun <- function(x, y, pl, plt, ps, vs,pcols){
+  gg.fun <- function(x, y, pl, bl, blt,plt, ps, vs,pcols){
     
     ## generate base plot
-
-    if(!is.null(pcols)){
-      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
-        geom_path( size = ps, show.legend = F)+  
-        coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
-        theme_bw() + 
-        theme(aspect.ratio = 1) +
-        scale_y_continuous(expand = c(0,0), breaks = vs)+
-        scale_colour_manual(values = pcols)
+    p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
+      geom_path( size = ps, show.legend = T)+  
+      coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      scale_y_continuous(expand = c(0,0), breaks = vs)+
+      scale_linetype_discrete(name=plt)
+    if(is.null(pcols)){
+      p <- p +
+        scale_colour_discrete(name=blt)
     }else{
-      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
-        geom_path( size = ps, show.legend = F)+  
-        coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
-        theme_bw() + 
-        theme(aspect.ratio = 1) +
-        scale_y_continuous(expand = c(0,0), breaks = vs) 
+      p <- p +
+        scale_colour_manual(values = pcols,name=blt)
     }
 
     ## add legend
-    #2DO: Implement option to see legend and manually set colors
-    if(isTRUE(pl)){
-      #l.df <- cbind.data.frame(frame = x[1,]$frame, value = x[1,]$value, name = levels(as.factor(y$name)),
-      #                         colour = as.character(y$colour[sapply(as.character(unique(y$name)), function(x) match(x, y$name)[1] )]), stringsAsFactors = F)
-      #l.df$name <- factor(l.df$name, levels = l.df$name)
-      #l.df <- rbind(l.df, l.df)
-      #p <- p+ scale_colour_manual()
+    if(!isTRUE(pl)){
+      p <- p + guides(linetype = FALSE)
+    }  
+    if(!isTRUE(bl)){
+      p <- p + guides(colour = FALSE)
     }  
     return(p)
   }
   
-  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq,pcols=position_colors){
-    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df, pl = path_legend, plt = path_legend_title, ps = path_size, vs = val_seq,pcols=position_colors)
+  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,pcols=position_colors){
+    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df,bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,pcols=position_colors)
   })
 }
+
+#Aux function for rounding significant digits, credit to 
+#https://stackoverflow.com/a/39611375
+floor_dec <- function(x, level=1) round(x - 5*10^(-level-1), level)
+ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)

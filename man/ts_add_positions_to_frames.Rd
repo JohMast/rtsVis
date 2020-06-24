@@ -2,9 +2,17 @@
 % Please edit documentation in R/ts_add_positions_to_frames.R
 \name{ts_add_positions_to_frames}
 \alias{ts_add_positions_to_frames}
-\title{Add points, coordinates, or polygons to a list of spatial plots}
+\title{Add points, coordinates, or polygons to a list of spatial plotss}
 \usage{
-ts_add_positions_to_frames(r_frame_list, positions, position_names = NULL)
+ts_add_positions_to_frames(
+  r_frame_list,
+  positions,
+  position_names = NULL,
+  pcol = "red",
+  psize = 2,
+  position_legend_title = "Position",
+  legend_position = "right"
+)
 }
 \arguments{
 \item{r_frame_list}{}
@@ -17,5 +25,5 @@ ts_add_positions_to_frames(r_frame_list, positions, position_names = NULL)
 
 }
 \description{
-Add points, coordinates, or polygons to a list of spatial plots
+Add points, coordinates, or polygons to a list of spatial plotss
 }
