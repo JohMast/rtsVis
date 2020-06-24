@@ -14,7 +14,7 @@
 
 
 
-ts_flow_frames <- function(r_list,positions,position_names=NULL,band_names=NULL,position_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,band_legend=T,band_legend_title="Bands",position_legend_title="Positions"){
+ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,position_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,band_legend=T,band_legend_title="Bands",position_legend_title="Positions"){
   ## extract the values of the raster into a long dataframe
   extract_df <- rtsVis:::.ts_extract_from_frames(r_list_extract = r_list,
                                                 positions = positions,
