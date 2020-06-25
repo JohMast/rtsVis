@@ -550,10 +550,10 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param val_seq 
 #' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
 #' @noRd
-.ts_gg_flow <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq, position_colors){
+.ts_gg_flow <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq, band_colors){
   
   ## stats plot function
-  gg.fun <- function(x, y, pl, bl, blt,plt, ps, vs,pcols){
+  gg.fun <- function(x, y, pl, bl, blt,plt, ps, vs,bcols){
     
     ## generate base plot
     p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
@@ -563,12 +563,12 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
       theme(aspect.ratio = 1) +
       scale_y_continuous(expand = c(0,0), breaks = vs)+
       scale_linetype_discrete(name=plt)
-    if(is.null(pcols)){
+    if(is.null(bcols)){
       p <- p +
         scale_colour_discrete(name=blt)
     }else{
       p <- p +
-        scale_colour_manual(values = pcols,name=blt)
+        scale_colour_manual(values = bcols,name=blt)
     }
 
     ## add legend
@@ -581,8 +581,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     return(p)
   }
   
-  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,pcols=position_colors){
-    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df,bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,pcols=position_colors)
+  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,bcols=band_colors){
+    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df,bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,bcols=band_colors)
   })
 }
 
