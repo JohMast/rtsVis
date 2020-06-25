@@ -15,11 +15,31 @@
 
 
 ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,band_legend=T,band_legend_title="Bands",position_legend_title="Positions"){
+  
+  #Ensure nice colors
+  if(is.null(band_colors)){
+    band_colors <-  hcl.colors(nrow(positions))
+  }
+  #Ensure nice df names
+  if(is.null(band_names)){
+    band_names <- paste0("Band",1:(nlayers(r_list_extract[[x]])))  #make artificial bandnames if necessary
+  }
+
+  
   ## extract the values of the raster into a long dataframe
   extract_df <- rtsVis:::.ts_extract_from_frames(r_list_extract = r_list,
                                                 positions = positions,
                                                 position_names = position_names,
                                                 band_names = band_names)
+  
+  #For this plot, we need the data in long format
+  extract_df <- extract_df%>% tidyr::pivot_longer(cols =  band_names) 
+  
+  #Make a df to match colors to band names
+  color_matching_table <- cbind(band_names,band_colors)
+  extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("name" = "band_names"),copy=T)
+  
+  
   
   ## create value sequence
   if(is.null(val_min)) val_min <- floor_dec(min(sapply(r_list, minValue), na.rm = T),level = 2)
@@ -41,7 +61,6 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                                       band_legend_title = band_legend_title,
                                       position_legend_title = position_legend_title,
                                       path_size =  path_size,
-                                      val_seq = val_seq,
-                                      band_colors=band_colors)
+                                      val_seq = val_seq)
   return(flow_frames)
 }
