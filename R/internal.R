@@ -433,7 +433,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 .ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean){
   frametimes <- .ts_get_frametimes(r_list_out)
   
-  nlay <- nlayers(r_list[[1]])#get the number of layers from a template
+  nlay <- nlayers(r_list_extract[[1]])#get the number of layers from a template
   
   assertthat::assert_that(length(r_list_out)==length(frametimes))
   
