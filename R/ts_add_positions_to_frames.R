@@ -46,14 +46,14 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
     data <-  data.frame(long=positions@coords[,1],lat=positions@coords[,2],group=as.factor(seq(1,nrow(positions))))
     print(data)
     if(is.null(position_names)){
-      levels(data$id) <- paste("Point" ,(1:nrow(positions)))
+      levels(data$group) <- paste("Point" ,(1:nrow(positions)))
     }else{
-      levels(data$id) <- as.factor(position_names)
+      levels(data$group) <- as.factor(position_names)
     }
     if(aes_by_pos){
       out <- moveVis::add_gg(r_frame_list, gg = expr(
         list(
-          geom_point(aes(x = long, y = lat,group=group,shape=id), data = data,colour = pcol,size=psize),
+          geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
           scale_shape_discrete(name = position_legend_title),
           theme(legend.position = legend_position)
         )
@@ -76,7 +76,7 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
     if(aes_by_pos){
       out  <- moveVis::add_gg(r_frame_list, gg = expr(
         list(
-          geom_point(aes(x = long, y = lat,group=group,shape=id), data = data,colour = pcol,size=psize),
+          geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
           scale_shape_discrete(name = position_legend_title),
           theme(legend.position = legend_position)
         )
