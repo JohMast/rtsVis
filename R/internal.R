@@ -430,7 +430,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
 #' @noRd
-.ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean){
+.ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean,buffer=NULL){
   frametimes <- .ts_get_frametimes(r_list_extract)
   
   nlay <- nlayers(r_list_extract[[1]])#get the number of layers from a template
@@ -445,7 +445,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         }else{
                           o_name <- paste("Point", 1:nrow(positions))
                         }
-                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,buffer=buffer)
                         #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                         #if so, things get more complicated
                         # we need make it a list of 1 for consitency
@@ -462,8 +462,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         extr_df <- do.call("rbind", extr_df)
                         #ensure that its a data frame
                         extr_df <- as.data.frame(extr_df)
-                        extr_df$centr_lon <- coordinates(positions)[, 1]
-                        extr_df$centr_lat <- coordinates(positions)[, 2]
+                        extr_df$centr_lon <- coordinates(positions)[, 1][i]
+                        extr_df$centr_lat <- coordinates(positions)[, 2][i]
                       }else if(inherits(positions,"SpatialPolygonsDataFrame")){
                         
                         if(!is.null(position_names)){
@@ -483,13 +483,14 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         for(i in 1:length(extr_df)){
                           extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                           extr_df[[i]]$object_name <- o_name[[i]]
+                          extr_df$centr_lon <- coordinates(positions)[, 1][i]
+                          extr_df$centr_lat <- coordinates(positions)[, 2][i]
                         }
                         #bind the list elements together
                         extr_df <- do.call("rbind", extr_df)
                         #ensure that its a data frame
                         extr_df <- as.data.frame(extr_df)
-                        extr_df$centr_lon <- coordinates(positions)[, 1]
-                        extr_df$centr_lat <- coordinates(positions)[, 2]
+
                         
                       }else if(inherits(positions,c("matrix","array"))){
                         assertthat::assert_that(ncol(positions)==2)
@@ -510,18 +511,21 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         for(i in 1:length(extr_df)){
                           extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                           extr_df[[i]]$object_name <- o_name[[i]]
+                          extr_df$centr_lon <- coordinates(positions)[, 1][i]
+                          extr_df$centr_lat <- coordinates(positions)[, 2][i]
                         }
                         #bind the list elements together
                         extr_df <- do.call("rbind", extr_df)
                         #ensure that its a data frame
                         extr_df <- as.data.frame(extr_df)
-                        extr_df$centr_lon <- coordinates(positions)[, 1]
-                        extr_df$centr_lat <- coordinates(positions)[, 2]
+
                       }else if(is.null(positions)){
                         extr_df <- raster::cellStats(r_list_extract[[x]],FUN) %>% matrix(nrow = 1,byrow = T) %>% as.data.frame()
                         extr_df$lon <- mean(extent(r_list_extract[[x]])[1:2])
                         extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
                         extr_df$object_name <- "AOI"
+                        extr_df$centr_lon <- 0  #2do: add the centroid coords or sth equivalent
+                        extr_df$centr_lat <- 0  #2do: add the centroid coords or sth equivalent
                       }
                       names(extr_df)[1:nlay] <- band_names
                       extr_df$time <- frametimes[as.integer(x)]
