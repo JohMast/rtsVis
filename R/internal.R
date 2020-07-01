@@ -457,13 +457,14 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         for(i in 1:length(extr_df)){
                           extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                           extr_df[[i]]$object_name <- o_name[[i]]
+                          extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                          extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
                         }
                         #bind the list elements together
                         extr_df <- do.call("rbind", extr_df)
                         #ensure that its a data frame
                         extr_df <- as.data.frame(extr_df)
-                        extr_df$centr_lon <- coordinates(positions)[, 1][i]
-                        extr_df$centr_lat <- coordinates(positions)[, 2][i]
+
                       }else if(inherits(positions,"SpatialPolygonsDataFrame")){
                         
                         if(!is.null(position_names)){
@@ -483,8 +484,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         for(i in 1:length(extr_df)){
                           extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                           extr_df[[i]]$object_name <- o_name[[i]]
-                          extr_df$centr_lon <- coordinates(positions)[, 1][i]
-                          extr_df$centr_lat <- coordinates(positions)[, 2][i]
+                          extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                          extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
                         }
                         #bind the list elements together
                         extr_df <- do.call("rbind", extr_df)
@@ -511,8 +512,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                         for(i in 1:length(extr_df)){
                           extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                           extr_df[[i]]$object_name <- o_name[[i]]
-                          extr_df$centr_lon <- coordinates(positions)[, 1][i]
-                          extr_df$centr_lat <- coordinates(positions)[, 2][i]
+                          extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                          extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
                         }
                         #bind the list elements together
                         extr_df <- do.call("rbind", extr_df)
@@ -540,7 +541,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 
 
 
-#' flow stats plot function
+#' line stats plot function
 #' Stolen from MoveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe, as provided by)
 #' @noRd 
 #' @param pos_df A dataframe 
@@ -550,7 +551,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param val_seq 
 #' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
 #' @noRd
-.ts_gg_flow <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq){
+.ts_gg_line <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq){
   
   ## stats plot function
   gg.fun <- function(x, y, pl, bl, blt,plt, ps, vs){
@@ -588,3 +589,43 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #https://stackoverflow.com/a/39611375
 floor_dec <- function(x, level=1) round(x - 5*10^(-level-1), level)
 ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
+
+
+
+.ts_gg_vio <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq){
+  
+  ## stats plot function
+  gg.fun <- function(x,pl, bl, blt,plt, ps, vs){
+    max(x$frame)
+    ## generate base plot
+    p <- ggplot(x, aes(x = 1, y = value,group = interaction(object_name,name),colour=name)) +
+      geom_violin( size = ps, show.legend = T)+  
+      coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      theme(axis.title.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank())+
+      scale_y_continuous(expand = c(0,0), breaks = vs)+
+      #scale_linetype_discrete(name=plt)+
+      facet_grid(object_name ~ name, scales='free')
+    
+    #add the colors
+    p <- p +
+      scale_colour_manual(values = x$band_colors,breaks = x$name, name=blt)
+    
+    
+    ## add legend
+    if(!isTRUE(pl)){
+      p <- p + guides(linetype = FALSE)
+    }  
+    if(!isTRUE(bl)){
+      p <- p + guides(colour = FALSE)
+    }  
+    return(p)
+  }
+  
+  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq){
+    gg.fun(x = pos_df[pos_df$frame == i,],bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq)
+  })
+}

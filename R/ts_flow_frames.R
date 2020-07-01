@@ -14,7 +14,11 @@
 
 
 
-ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,band_legend=T,band_legend_title="Bands",position_legend_title="Positions",buffer=NULL){
+ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,band_legend=T,band_legend_title="Bands",position_legend_title="Positions",buffer=NULL,plot_type="line",FUN=mean){
+  #Check: If a violin Plot is requested, no aggregation function can be used, as the full sample is required
+  if(plot_type=="violin"){
+    FUN=NULL
+  }
   
   #Ensure nice colors
   if(is.null(band_colors)){
@@ -31,11 +35,13 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                                                 positions = positions,
                                                 position_names = position_names,
                                                 band_names = band_names,
-                                                buffer=buffer)
+                                                buffer= buffer,
+                                                FUN = FUN)
   
   #For this plot, we need the data in long format
-  extract_df <- extract_df%>% tidyr::pivot_longer(cols =  band_names) 
-  
+  if(plot_type %in% c("violin","line")){
+    extract_df <- extract_df%>% tidyr::pivot_longer(cols =  band_names) 
+  }
   #Make a df to match colors to band names
   color_matching_table <- cbind(band_names,band_colors)
   extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("name" = "band_names"),copy=T)
@@ -56,12 +62,24 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     val_seq <- seq(val_min, val_max, by = val_by)
   }
   
-  flow_frames <- rtsVis:::.ts_gg_flow(pos_df = extract_df,
-                                      position_legend = position_legend,
-                                      band_legend = band_legend,
-                                      band_legend_title = band_legend_title,
-                                      position_legend_title = position_legend_title,
-                                      path_size =  path_size,
-                                      val_seq = val_seq)
+  
+  if(plot_type=="line"){
+    flow_frames <- rtsVis:::.ts_gg_line(pos_df = extract_df,
+                                        position_legend = position_legend,
+                                        band_legend = band_legend,
+                                        band_legend_title = band_legend_title,
+                                        position_legend_title = position_legend_title,
+                                        path_size =  path_size,
+                                        val_seq = val_seq)
+  }else if(plot_type=="violin"){
+    flow_frames <- rtsVis:::.ts_gg_vio(pos_df = extract_df,
+                                        position_legend = position_legend,
+                                        band_legend = band_legend,
+                                        band_legend_title = band_legend_title,
+                                        position_legend_title = position_legend_title,
+                                        path_size =  path_size,
+                                        val_seq = val_seq)
+  }
+
   return(flow_frames)
 }
