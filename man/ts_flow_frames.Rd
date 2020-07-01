@@ -6,10 +6,10 @@
 \usage{
 ts_flow_frames(
   r_list,
-  positions,
+  positions = NULL,
   position_names = NULL,
   band_names = NULL,
-  position_colors = NULL,
+  band_colors = NULL,
   val_min = NULL,
   val_max = NULL,
   val_by = 0.1,
@@ -17,7 +17,10 @@ ts_flow_frames(
   position_legend = T,
   band_legend = T,
   band_legend_title = "Bands",
-  position_legend_title = "Positions"
+  position_legend_title = "Positions",
+  buffer = NULL,
+  plot_type = "line",
+  FUN = mean
 )
 }
 \arguments{
