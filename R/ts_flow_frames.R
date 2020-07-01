@@ -14,7 +14,7 @@
 
 
 
-ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,band_legend=T,band_legend_title="Bands",position_legend_title="Positions",buffer=NULL,plot_type="line",FUN=mean){
+ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,legend_position="right",band_legend=T,band_legend_title="Bands",position_legend_title="Positions",buffer=0,plot_type="line",aes_by_pos=T,FUN=mean){
   #Check: If a violin Plot is requested, no aggregation function can be used, as the full sample is required
   if(plot_type=="violin"){
     FUN=NULL
@@ -69,16 +69,20 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                                         band_legend = band_legend,
                                         band_legend_title = band_legend_title,
                                         position_legend_title = position_legend_title,
+                                        legend_position = legend_position,
                                         path_size =  path_size,
-                                        val_seq = val_seq)
+                                        val_seq = val_seq,
+                                        aes_by_pos=aes_by_pos)
   }else if(plot_type=="violin"){
     flow_frames <- rtsVis:::.ts_gg_vio(pos_df = extract_df,
                                         position_legend = position_legend,
                                         band_legend = band_legend,
                                         band_legend_title = band_legend_title,
                                         position_legend_title = position_legend_title,
+                                       legend_position = legend_position,
                                         path_size =  path_size,
-                                        val_seq = val_seq)
+                                        val_seq = val_seq,
+                                       aes_by_pos=aes_by_pos)
   }
 
   return(flow_frames)

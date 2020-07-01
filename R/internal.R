@@ -551,19 +551,27 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param val_seq 
 #' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
 #' @noRd
-.ts_gg_line <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq){
+.ts_gg_line <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
   
   ## stats plot function
-  gg.fun <- function(x, y, pl, bl, blt,plt, ps, vs){
+  gg.fun <- function(x, y, pl,lp, bl, blt,plt, ps, vs,abp){
     
-    ## generate base plot
-    p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name,linetype=object_name)) +
+    ## generate base plot, either with position mapped to linetype or without
+    if(!isTRUE(abp)){
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name))
+    }else{
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),linetype=object_name,colour=name))+
+        scale_linetype_discrete(name=plt)
+      
+    }
+    ## style it
+    p <- p +
       geom_path( size = ps, show.legend = T)+  
       coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
       theme_bw() + 
       theme(aspect.ratio = 1) +
       scale_y_continuous(expand = c(0,0), breaks = vs)+
-      scale_linetype_discrete(name=plt)
+      theme(legend.position = lp)
 
       #add the colors
       p <- p +
@@ -580,8 +588,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     return(p)
   }
   
-  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq){
-    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df,bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq)
+  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
+    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df,bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
   })
 }
 
@@ -592,13 +600,22 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 
 
 
-.ts_gg_vio <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, path_size, val_seq){
+.ts_gg_vio <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
   
   ## stats plot function
-  gg.fun <- function(x,pl, bl, blt,plt, ps, vs){
-    max(x$frame)
-    ## generate base plot
-    p <- ggplot(x, aes(x = 1, y = value,group = interaction(object_name,name),colour=name)) +
+  gg.fun <- function(x,pl,lp, bl, blt,plt, ps, vs,abp){
+    
+    ## generate base plot, either with position mapped to linetype or without
+    if(!isTRUE(abp)){
+      p <- ggplot(x, aes(x = 1, y = value,group = interaction(object_name,name),colour=name))
+    }else{
+      p <- ggplot(x, aes(x = 1, y = value,group = interaction(object_name,name),linetype=object_name,colour=name))+
+        scale_linetype_discrete(name=plt)
+      
+    }
+    
+    #Style the plot
+    p <-p +
       geom_violin( size = ps, show.legend = T)+  
       coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
       theme_bw() + 
@@ -607,8 +624,8 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
             axis.text.x=element_blank(),
             axis.ticks.x=element_blank())+
       scale_y_continuous(expand = c(0,0), breaks = vs)+
-      #scale_linetype_discrete(name=plt)+
-      facet_grid(object_name ~ name, scales='free')
+      facet_grid(object_name ~ name, scales='free')+
+      theme(legend.position = lp)
     
     #add the colors
     p <- p +
@@ -625,7 +642,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
     return(p)
   }
   
-  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq){
-    gg.fun(x = pos_df[pos_df$frame == i,],bl = band_legend, pl = position_legend, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq)
+  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
+    gg.fun(x = pos_df[pos_df$frame == i,],bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
   })
 }
