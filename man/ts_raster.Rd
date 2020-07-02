@@ -7,21 +7,24 @@
 ts_raster(r_list, r_times, out_times = NA, fade_raster = F, ..., verbose = T)
 }
 \arguments{
-\item{r_list}{list of rasters}
+\item{r_list}{a list of raster objects.}
 
-\item{r_times}{POSIXct,}
+\item{r_times}{POSIXct, a vector of times corresponding to the elements of \code{r_list}.}
 
-\item{out_times}{POSIXct,}
+\item{out_times}{POSIXct, a vector of times for which output rasters will be created.}
 
-\item{fade_raster}{logical,}
+\item{fade_raster}{(Optional) logical. If \code{TRUE} performs a linear interpolation to calculate the values for the output raster. Otherwise uses a nearest temporal neighbor approach. Default is \code{FALSE}.}
 
 \item{...}{additional arguments.}
 
-\item{verbose}{}
+\item{verbose}{(Optional) logical. If \code{TRUE} outputs progress. Default is \code{TRUE}.}
 }
 \value{
 
 }
 \description{
 This function assembles a raster time series by assigning or interpolating input rasters to a target time series.
+}
+\author{
+Jakob Schwalb-Willmann
 }

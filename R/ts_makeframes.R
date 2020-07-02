@@ -1,14 +1,25 @@
-#' Create Spatial Plots of a raster time series
+#' Create spatial ggplots of a raster time series
 #'
-#' @param x_list A list of rasters.
-#' @param r_type one of "discrete","gradient", "RGB"
-#' @param minq Lower quantile boundary for the stretch
-#' @param maxq Upper quantile boundary for the stretch
-#' @param samplesize Number of samples to determine the quantile from
+#' @param x_list a list of raster objects.
+#' @param r_type (Optional) character, one of \code{"discrete"}, \code{"gradient"} or \code{"RGB"}. By default, attempts to discern the \code{r_type} from the content of \code{r_list}.
+#' @param minq (Optional) numeric, lower quantile boundary for the stretch.  Default is \code{0.02}.
+#' @param maxq (Optional) numeric, upper quantile boundary for the stretch. Default is \code{0.98}.
+#' @param samplesize (Optional) numeric, number of samples per layer to determine the quantile from. See \link[raster]{sampleRegular} for details on the sampling. Default is \code{1000}.
+#' @param blacken_NA  (Optional) logical. If \code{TRUE}: set \code{NA} to \code{0}. Default is \code{FALSE}. 
+#' @param l_indices (Optional) numeric, a vector of layer indices specifying which layers are to be plotted. Should contain 3 values for an RGB image or a single value for a discrete or gradient image. By default, chooses the first three layers if \code{r_type} is \code{"RGB"} and the first layer if \code{r_type} is \code{"discrete"} or \code{"gradient"}.
 #'
 #' @return A list of ggplots
+#' @details A linear percent stretch will be applied to each band to improve contrast.
+#' #\deqn{(X - Low_{in}) * \frac{((High_{out}-Low_{out})}{(High_{in}-Low_{in}))}  + Low_{out}}
+#' # The stretch parameters 
+#' # \eqn{High_{out}},\eqn{Low_{out}},\eqn{High_{in}},\eqn{Low_{in}}
+#' #  are calculated seperately for each band based on the \code{minq} and \code{maxq} which are first applied to \code{samplesize} regular samples (see \link[raster]{sampleRegular}) of each individual layer.
+#'  From these, across all layers belonging to a certain band, the minimum and maximum values are taken as the stretching parameters for the linear stretch, which is performed using  \link[RStoolbox]{rescaleImage}.  Discrete \code{r_type}s will not be stretched.
+#'   To further enhance the plots, consider using functionalities implemented in \pkg{moveVis},
+#' (see \url{http://movevis.org/} ). For example, a northarrow may be added to all frames using \link[moveVis]{add_northarrow}.
 #' @export
-#' @importFrom raster compareCRS nlayers
+#' @author Johannes Mast
+#' @importFrom raster compareCRS nlayers 
 ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=F,l_indices=NULL){
   
   #If r_type not provided, guess from the first raster object in the list

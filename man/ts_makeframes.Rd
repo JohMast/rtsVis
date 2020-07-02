@@ -2,7 +2,7 @@
 % Please edit documentation in R/ts_makeframes.R
 \name{ts_makeframes}
 \alias{ts_makeframes}
-\title{Create Spatial Plots of a raster time series}
+\title{Create spatial ggplots of a raster time series}
 \usage{
 ts_makeframes(
   x_list,
@@ -15,19 +15,36 @@ ts_makeframes(
 )
 }
 \arguments{
-\item{x_list}{A list of rasters.}
+\item{x_list}{a list of raster objects.}
 
-\item{r_type}{one of "discrete","gradient", "RGB"}
+\item{r_type}{(Optional) character, one of \code{"discrete"}, \code{"gradient"} or \code{"RGB"}. By default, attempts to discern the \code{r_type} from the content of \code{r_list}.}
 
-\item{minq}{Lower quantile boundary for the stretch}
+\item{minq}{(Optional) numeric, lower quantile boundary for the stretch.  Default is \code{0.02}.}
 
-\item{maxq}{Upper quantile boundary for the stretch}
+\item{maxq}{(Optional) numeric, upper quantile boundary for the stretch. Default is \code{0.98}.}
 
-\item{samplesize}{Number of samples to determine the quantile from}
+\item{samplesize}{(Optional) numeric, number of samples per layer to determine the quantile from. See \link[raster]{sampleRegular} for details on the sampling. Default is \code{1000}.}
+
+\item{blacken_NA}{(Optional) logical. If \code{TRUE}: set \code{NA} to \code{0}. Default is \code{FALSE}.}
+
+\item{l_indices}{(Optional) numeric, a vector of layer indices specifying which layers are to be plotted. Should contain 3 values for an RGB image or a single value for a discrete or gradient image. By default, chooses the first three layers if \code{r_type} is \code{"RGB"} and the first layer if \code{r_type} is \code{"discrete"} or \code{"gradient"}.}
 }
 \value{
 A list of ggplots
 }
 \description{
-Create Spatial Plots of a raster time series
+Create spatial ggplots of a raster time series
+}
+\details{
+A linear percent stretch will be applied to each band to improve contrast.
+#\deqn{(X - Low_{in}) * \frac{((High_{out}-Low_{out})}{(High_{in}-Low_{in}))}  + Low_{out}}
+# The stretch parameters 
+# \eqn{High_{out}},\eqn{Low_{out}},\eqn{High_{in}},\eqn{Low_{in}}
+#  are calculated seperately for each band based on the \code{minq} and \code{maxq} which are first applied to \code{samplesize} regular samples (see \link[raster]{sampleRegular}) of each individual layer.
+ From these, across all layers belonging to a certain band, the minimum and maximum values are taken as the stretching parameters for the linear stretch, which is performed using  \link[RStoolbox]{rescaleImage}.  Discrete \code{r_type}s will not be stretched.
+  To further enhance the plots, consider using functionalities implemented in \pkg{moveVis},
+(see \url{http://movevis.org/} ). For example, a northarrow may be added to all frames using \link[moveVis]{add_northarrow}.
+}
+\author{
+Johannes Mast
 }

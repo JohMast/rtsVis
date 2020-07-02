@@ -4,14 +4,24 @@
 \alias{ts_fill_na}
 \title{Fill NA values in a raster time series}
 \usage{
-ts_fill_na(x_list_fill)
+ts_fill_na(x_list_fill, verbose = F, ...)
 }
 \arguments{
-\item{x_list_fill}{}
+\item{x_list_fill}{a list of raster objects.}
+
+\item{verbose}{(Optional) logical. If \code{TRUE} outputs progress. Default is \code{FALSE}.}
+
+\item{...}{additional arguments to be passed on to  \link[raster]{approxNA}. Of particular interest is the \code{rule} argument which defines how first and last cells are dealt with.}
 }
 \value{
-
+A list of rasters with NAs filled.
 }
 \description{
 Fill NA values in a raster time series
+}
+\details{
+Iteratively loads all layers of a specific bands into a stack and uses \link[raster]{approxNA} to fill the NAs if possible. Note that the procedure requires the entire list of raster layery for each band to be be stacked. It is therefore very memory intensive and likely to fail for very large time series.
+}
+\author{
+Johannes Mast
 }

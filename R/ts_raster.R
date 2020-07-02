@@ -2,13 +2,13 @@
 #'
 #' This function assembles a raster time series by assigning or interpolating input rasters to a target time series.
 #'
-#' @param r_list list of rasters
-#' @param r_times POSIXct, 
-#' @param out_times POSIXct, 
-#' @param fade_raster logical,
+#' @param r_list a list of raster objects.
+#' @param r_times POSIXct, a vector of times corresponding to the elements of \code{r_list}.
+#' @param out_times POSIXct, a vector of times for which output rasters will be created.
+#' @param fade_raster (Optional) logical. If \code{TRUE} performs a linear interpolation to calculate the values for the output raster. Otherwise uses a nearest temporal neighbor approach. Default is \code{FALSE}. 
 #' @param ... additional arguments.
-#' @param verbose
-#' 
+#' @param verbose  (Optional) logical. If \code{TRUE} outputs progress. Default is \code{TRUE}. 
+#' @author Jakob Schwalb-Willmann
 #' @return
 #' 
 #' 

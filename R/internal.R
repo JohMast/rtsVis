@@ -429,6 +429,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param FUN A function to apply to summarize the values per position object. Default is mean.
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
+#' @importFrom raster extract
+#' @import sp
 #' @noRd
 .ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean,buffer=NULL){
   frametimes <- .ts_get_frametimes(r_list_extract)
