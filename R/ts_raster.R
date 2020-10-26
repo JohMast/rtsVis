@@ -8,8 +8,8 @@
 #' @param fade_raster (Optional) logical. If \code{TRUE} performs a linear interpolation to calculate the values for the output raster. Otherwise uses a nearest temporal neighbor approach. Default is \code{FALSE}. 
 #' @param ... additional arguments.
 #' @param verbose  (Optional) logical. If \code{TRUE} outputs progress. Default is \code{TRUE}. 
-#' @author Jakob Schwalb-Willmann
-#' @return
+#' @author Jakob Schwalb-Willmann, Johannes Mast
+#' @value a list of raster objects.
 #' 
 #' 
 #' @export

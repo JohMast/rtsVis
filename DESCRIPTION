@@ -15,6 +15,10 @@ Imports:
   RStoolbox,
   moveVis,
   raster,
-  stats
+  stats,
+  dplyr,
+  pbapply,
+  sp,
+  tidyr
 BugReports: http://www.github.com/16eagle/rtsVis/issues
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
