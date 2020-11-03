@@ -27,7 +27,7 @@
 #'  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values. 
 #' @author Johannes Mast
 #' @import sp ggplot2
-
+#' @importFrom grDevices hcl.colors
 #' @importFrom dplyr left_join
 #' @return A list of ggplots, one for each element of \code{r_list}.
 #' @seealso \code{\link{ts_raster}}
@@ -53,7 +53,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
 
   
   ## extract the values of the raster into a long dataframe
-  extract_df <- rtsVis:::.ts_extract_from_frames(r_list_extract = r_list,
+  extract_df <- .ts_extract_from_frames(r_list_extract = r_list,
                                                 positions = positions,
                                                 position_names = position_names,
                                                 band_names = band_names,
@@ -62,7 +62,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   
   #For this plot, we need the data in long format
   if(plot_type %in% c("violin","line")){
-    extract_df <- extract_df%>% tidyr::pivot_longer(cols =  band_names) 
+    extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names) 
   }
   #Make a df to match colors to band names
   color_matching_table <- cbind(band_names,band_colors)
@@ -86,7 +86,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   
   
   if(plot_type=="line"){
-    flow_frames <- rtsVis:::.ts_gg_line(pos_df = extract_df,
+    flow_frames <- .ts_gg_line(pos_df = extract_df,
                                         position_legend = position_legend,
                                         band_legend = band_legend,
                                         band_legend_title = band_legend_title,
@@ -96,7 +96,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                                         val_seq = val_seq,
                                         aes_by_pos=aes_by_pos)
   }else if(plot_type=="violin"){
-    flow_frames <- rtsVis:::.ts_gg_vio(pos_df = extract_df,
+    flow_frames <-.ts_gg_vio(pos_df = extract_df,
                                         position_legend = position_legend,
                                         band_legend = band_legend,
                                         band_legend_title = band_legend_title,

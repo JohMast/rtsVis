@@ -20,11 +20,11 @@ ts_raster(r_list, r_times, out_times = NA, fade_raster = F, ..., verbose = T)
 \item{verbose}{(Optional) logical. If \code{TRUE} outputs progress. Default is \code{TRUE}.}
 }
 \value{
-
+a list of raster objects.
 }
 \description{
 This function assembles a raster time series by assigning or interpolating input rasters to a target time series.
 }
 \author{
-Jakob Schwalb-Willmann
+Jakob Schwalb-Willmann, Johannes Mast
 }

@@ -16,7 +16,7 @@ ts_fill_na <- function(x_list_fill,verbose=F,...){
       print(paste0("Filling Layer:",n_l))
     }
     #make a brick from all the layers
-    x_lay <- rtsVis:::.ts_subset_ts_util(x_list_fill,n_l) %>% stack()
+    x_lay <- stack( .ts_subset_ts_util(x_list_fill,n_l) )
     #fill the nas
     x_lay_filled <- raster::approxNA(x_lay,...)
     #reassign the filled layers to the list elements

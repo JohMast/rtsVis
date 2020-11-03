@@ -1,3 +1,41 @@
+#' NULL declaration to suppres R CMD CHECK warning related to tidyverse syntax
+#' @keywords internal
+#' @noRd
+aggregate <- time <- name <- value <- long  <-  lat <-   group <-  hcl.colors <- r_list_extract <-  x <-  minValue <-  maxValue <- quantile <-object_name  <- id <-  NULL
+
+
+##From moveVis
+#' verbose lapply
+#'
+#' @importFrom pbapply pblapply
+#' @noRd 
+.lapply <- function(X, FUN, ..., moveVis.verbose = NULL, moveVis.n_cores = NULL, moveVis.export = NULL){
+  if(is.null(moveVis.verbose)) moveVis.verbose <- getOption("moveVis.verbose")
+  if(is.null(moveVis.n_cores)) moveVis.n_cores <- getOption("moveVis.n_cores")
+  
+  # with parallelization
+  if(moveVis.n_cores > 1){
+    cl <- parallel::makeCluster(moveVis.n_cores)
+    if(!is.null(moveVis.export)) parallel::clusterExport(cl, moveVis.export)
+    y <- try(parallel::parLapply(cl = cl, X, FUN, ...)) # ensures that cluster is stopped appropriately
+    parallel::stopCluster(cl)
+    if(inherits(y, "try-error")) out(y, type = 3) else return(y)
+    
+    # without parallelization
+  }else if(isTRUE(moveVis.verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
+}
+
+##From raster
+.haveMinMax <- function(x) {
+  if (inherits(x, "RasterLayer") || inherits(x, "RasterBrick")) {
+    return(x@data@haveminmax)
+  } else if (inherits(x, "RasterStack")) {
+    return(all(sapply(x@layers, function(y) y@data@haveminmax)))
+  } else {
+    return(FALSE)
+  }
+}
+
 #' Suppress messages and warnings
 #' @noRd 
 quiet <- function(expr){
@@ -123,7 +161,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
   if(!is.null(extras$maxColorValue)) maxColorValue <- extras$maxColorValue else maxColorValue <- NA
   
   # aggregate raster if too large
-  if(maxpixels < ncell(r)) r <- aggregate(r, fact = ceiling(ncell(r)/maxpixels))
+  if(maxpixels < ncell(r)) r <- raster::aggregate(r, fact = ceiling(ncell(r)/maxpixels))
   
   # transform into data.frame
   df <- data.frame(raster::as.data.frame(r, xy = T))
@@ -256,7 +294,8 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' @param minq Lower quantile to be determined
 #' @param maxq Upper quantile to be determined
 #' @param samplesize Number of samples to take
-#' @importFrom raster sampleRegular
+#' @importFrom raster sampleRegular minValue maxValue
+#' @importFrom stats quantile
 #' @return a named vector of the minimum and maximum value (corresponding to minq and maxq)
 #' @noRd
 ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
@@ -265,8 +304,8 @@ ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
   maxq <- min(1,maxq)
   stopifnot(minq < maxq)
   
-  if ((minq==0 & maxq==1) & raster:::.haveMinMax(x)) {
-    q <- cbind(minValue(x), maxValue(x))
+  if ((minq==0 & maxq==1) & .haveMinMax(x)) {
+    q <- cbind(minValue(x), maxValue(x)) #old version that works, but requires internal raster function
   } else {
     if (samplesize[1] < ncell(x)) {
       stopifnot(samplesize[1] > 1) 
@@ -357,17 +396,18 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   .ts_set_frametimes(out,.ts_get_frametimes(x_list))
 }
 
-#' .ts_update_NA_util
-#'
-#' @param x a raster object
-#' @param new_na Value to replace the old one as NA
-#' @return The modified raster object, with the new NA value set
-#' @noRd
-.ts_update_NA_util <- function(x,new_na){
-  NAvalue(x) <- new_na
-  return(x)
-}
-
+#' #' .ts_update_NA_util
+#' #'
+#' #' @param x a raster object
+#' #' @param new_na Value to replace the old one as NA
+#' #' @return The modified raster object, with the new NA value set
+#' #' @importFrom raster NAvalue
+#' #' @noRd
+#' .ts_update_NA_util <- function(x,new_na){
+#'   NAvalue(x) <- new_na
+#'   return(x)
+#' }
+#' 
 
 #' .blacken_NA_util
 #' @param x A list of raster objects 
@@ -430,6 +470,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
 #' @importFrom raster extract
+#' @importFrom assertthat assert_that
 #' @import sp
 #' @noRd
 .ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean,buffer=NULL){
@@ -437,104 +478,104 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   
   nlay <- nlayers(r_list_extract[[1]])#get the number of layers from a template
   
-  assertthat::assert_that(length(r_list_extract)==length(frametimes))
+  assert_that(length(r_list_extract)==length(frametimes))
   
-  extr_df <- lapply(names(r_list_extract),
-                    function(x) {
-                      if(inherits(positions,"SpatialPointsDataFrame")){
-                        if(!is.null(position_names)){
-                          o_name <- position_names
-                        }else{
-                          o_name <- paste("Point", 1:nrow(positions))
-                        }
-                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,buffer=buffer)
-                        #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
-                        #if so, things get more complicated
-                        # we need make it a list of 1 for consitency
-                        # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
-                        if(!is.list(extr_df)){
-                          extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
-                        }
-                        #add the object name to the respective list element
-                        for(i in 1:length(extr_df)){
-                          extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                          extr_df[[i]]$object_name <- o_name[[i]]
-                          extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
-                          extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
-                        }
-                        #bind the list elements together
-                        extr_df <- do.call("rbind", extr_df)
-                        #ensure that its a data frame
-                        extr_df <- as.data.frame(extr_df)
-
-                      }else if(inherits(positions,"SpatialPolygonsDataFrame")){
-                        
-                        if(!is.null(position_names)){
-                          o_name <- position_names
-                        }else{
-                          o_name <-paste("Polygon" ,(1:nrow(positions)))
-                        }
-                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
-                        #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
-                        #if so, things get more complicated
-                        # we need make it a list of 1 for consitency
-                        # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
-                        if(!is.list(extr_df)){
-                          extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
-                        }
-                        #add the object name to the respective list element
-                        for(i in 1:length(extr_df)){
-                          extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                          extr_df[[i]]$object_name <- o_name[[i]]
-                          extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
-                          extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
-                        }
-                        #bind the list elements together
-                        extr_df <- do.call("rbind", extr_df)
-                        #ensure that its a data frame
-                        extr_df <- as.data.frame(extr_df)
-
-                        
-                      }else if(inherits(positions,c("matrix","array"))){
-                        assertthat::assert_that(ncol(positions)==2)
-                        if(!is.null(position_names)){
-                          o_name <- position_names
-                        }else{
-                          o_name <- paste("Point", 1:nrow(positions))
-                        }
-                        extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
-                        #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
-                        #if so, things get more complicated
-                        # we need make it a list of 1 for consitency
-                        # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
-                        if(!is.list(extr_df)){
-                          extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
-                        }
-                        #add the object name to the respective list element
-                        for(i in 1:length(extr_df)){
-                          extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                          extr_df[[i]]$object_name <- o_name[[i]]
-                          extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
-                          extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
-                        }
-                        #bind the list elements together
-                        extr_df <- do.call("rbind", extr_df)
-                        #ensure that its a data frame
-                        extr_df <- as.data.frame(extr_df)
-
-                      }else if(is.null(positions)){
-                        extr_df <- raster::cellStats(r_list_extract[[x]],FUN) %>% matrix(nrow = 1,byrow = T) %>% as.data.frame()
-                        extr_df$lon <- mean(extent(r_list_extract[[x]])[1:2])
-                        extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
-                        extr_df$object_name <- "AOI"
-                        extr_df$centr_lon <- 0  #2do: add the centroid coords or sth equivalent
-                        extr_df$centr_lat <- 0  #2do: add the centroid coords or sth equivalent
-                      }
-                      names(extr_df)[1:nlay] <- band_names
-                      extr_df$time <- frametimes[as.integer(x)]
-                      return(extr_df)
-                    }) %>% 
-    do.call(rbind,.)
+  extr_df <-  
+    do.call(rbind,lapply(names(r_list_extract),
+                         function(x) {
+                           if(inherits(positions,"SpatialPointsDataFrame")){
+                             if(!is.null(position_names)){
+                               o_name <- position_names
+                             }else{
+                               o_name <- paste("Point", 1:nrow(positions))
+                             }
+                             extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,buffer=buffer)
+                             #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
+                             #if so, things get more complicated
+                             # we need make it a list of 1 for consitency
+                             # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                             if(!is.list(extr_df)){
+                               extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                             }
+                             #add the object name to the respective list element
+                             for(i in 1:length(extr_df)){
+                               extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                               extr_df[[i]]$object_name <- o_name[[i]]
+                               extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                               extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
+                             }
+                             #bind the list elements together
+                             extr_df <- do.call("rbind", extr_df)
+                             #ensure that its a data frame
+                             extr_df <- as.data.frame(extr_df)
+                             
+                           }else if(inherits(positions,"SpatialPolygonsDataFrame")){
+                             
+                             if(!is.null(position_names)){
+                               o_name <- position_names
+                             }else{
+                               o_name <-paste("Polygon" ,(1:nrow(positions)))
+                             }
+                             extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                             #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
+                             #if so, things get more complicated
+                             # we need make it a list of 1 for consitency
+                             # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                             if(!is.list(extr_df)){
+                               extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                             }
+                             #add the object name to the respective list element
+                             for(i in 1:length(extr_df)){
+                               extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                               extr_df[[i]]$object_name <- o_name[[i]]
+                               extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                               extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
+                             }
+                             #bind the list elements together
+                             extr_df <- do.call("rbind", extr_df)
+                             #ensure that its a data frame
+                             extr_df <- as.data.frame(extr_df)
+                             
+                             
+                           }else if(inherits(positions,c("matrix","array"))){
+                             assert_that(ncol(positions)==2)
+                             if(!is.null(position_names)){
+                               o_name <- position_names
+                             }else{
+                               o_name <- paste("Point", 1:nrow(positions))
+                             }
+                             extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                             #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
+                             #if so, things get more complicated
+                             # we need make it a list of 1 for consitency
+                             # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                             if(!is.list(extr_df)){
+                               extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                             }
+                             #add the object name to the respective list element
+                             for(i in 1:length(extr_df)){
+                               extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                               extr_df[[i]]$object_name <- o_name[[i]]
+                               extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                               extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
+                             }
+                             #bind the list elements together
+                             extr_df <- do.call("rbind", extr_df)
+                             #ensure that its a data frame
+                             extr_df <- as.data.frame(extr_df)
+                             
+                           }else if(is.null(positions)){
+                             extr_df <- as.data.frame(matrix( raster::cellStats(r_list_extract[[x]],FUN),nrow = 1,byrow = T)) #unpiped
+                             extr_df$lon <- mean(extent(r_list_extract[[x]])[1:2])
+                             extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
+                             extr_df$object_name <- "AOI"
+                             extr_df$centr_lon <- 0  #2do: add the centroid coords or sth equivalent
+                             extr_df$centr_lat <- 0  #2do: add the centroid coords or sth equivalent
+                           }
+                           names(extr_df)[1:nlay] <- band_names
+                           extr_df$time <- frametimes[as.integer(x)]
+                           return(extr_df)
+                         }))
   extr_df$frame <- as.numeric(as.factor(extr_df$time))
   out <- extr_df 
   
@@ -590,7 +631,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     return(p)
   }
   
-  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
+  .lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
     gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df,bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
   })
 }
@@ -644,7 +685,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
     return(p)
   }
   
-  moveVis:::.lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
+  .lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
     gg.fun(x = pos_df[pos_df$frame == i,],bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
   })
 }

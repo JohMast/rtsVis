@@ -9,7 +9,7 @@
 #' @param ... additional arguments.
 #' @param verbose  (Optional) logical. If \code{TRUE} outputs progress. Default is \code{TRUE}. 
 #' @author Jakob Schwalb-Willmann, Johannes Mast
-#' @value a list of raster objects.
+#' @return a list of raster objects.
 #' 
 #' 
 #' @export

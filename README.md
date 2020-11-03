@@ -41,4 +41,4 @@ r_int <- ts_raster(r_list, r_times, out_times, fade_raster = T)
 * `ts_stars()` -- raster time series assembly/interpolation, returned object is `stars` array
 * ...
 
-In development, not public yet. Last updated: `2020-05-08 13:57:06 CEST`
+In development, not public yet. Last updated: `2020-10-26 13:57:06 CEST`
