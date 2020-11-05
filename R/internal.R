@@ -587,14 +587,14 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' line stats plot function
 #' Adapted from moveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe
 #' @noRd 
-#' @param pos_df A dataframe 
+#' @param extract_df A dataframe 
 #' @param path_legend 
 #' @param band_legend_title 
 #' @param path_size 
 #' @param val_seq 
 #' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
 #' @noRd
-.ts_gg_line <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
+.ts_gg_line <- function(extract_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
   
   ## stats plot function
   gg.fun <- function(x, y, pl,lp, bl, blt,plt, ps, vs,abp){
@@ -631,8 +631,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     return(p)
   }
   
-  .lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
-    gg.fun(x = pos_df[pos_df$frame <= i,], y = pos_df,bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
+  .lapply(1:max(extract_df$frame), function(i, x = extract_df, bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
+    gg.fun(x = extract_df[extract_df$frame <= i,], y = extract_df,bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
   })
 }
 
@@ -643,7 +643,24 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 
 
 
-.ts_gg_vio <- function(pos_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
+#' .ts_gg_vio
+#'
+#' @description Create 
+#' @param extract_df A list of positions.
+#' @param position_legend 
+#' @param band_legend 
+#' @param band_legend_title 
+#' @param position_legend_title 
+#' @param legend_position 
+#' @param path_size 
+#' @param val_seq 
+#' @param aes_by_pos 
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.ts_gg_vio <- function(extract_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
   
   ## stats plot function
   gg.fun <- function(x,pl,lp, bl, blt,plt, ps, vs,abp){
@@ -685,7 +702,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
     return(p)
   }
   
-  .lapply(1:max(pos_df$frame), function(i, x = pos_df, bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
-    gg.fun(x = pos_df[pos_df$frame == i,],bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
+  .lapply(1:max(extract_df$frame), function(i, x = extract_df, bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
+    gg.fun(x = extract_df[extract_df$frame == i,],bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
   })
 }
