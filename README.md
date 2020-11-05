@@ -2,6 +2,13 @@
 
 A lightweight `R` package to visualize large raster time series, building on a fast temporal interpolation core.
 
+## Concepts
+rtsVis operates on lists of objects:
+
+- Lists of raster stacks 
+- Lists of frames (ggplot objects of rasters)
+
+
 ## Get started
 
 ``` r

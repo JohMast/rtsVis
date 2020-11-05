@@ -25,4 +25,5 @@ BugReports:  https://github.com/16eagle/rtsVis/issues
 RoxygenNote: 7.1.1
 Suggests: 
     spelling
+LazyData: true
 Language: en-US

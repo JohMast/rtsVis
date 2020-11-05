@@ -77,6 +77,68 @@ Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2
  The type of the ggplot is specified by \code{plot_type}. Currently supported are \code{"line"} and \code{"violin"}.
  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values.
 }
+\examples{
+\donttest{
+#' #Setup
+library(rtsVis)
+
+x_list <- MODIS_SI_ds
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+
+#Fill NAs
+x_list_filled <- ts_fill_na(x_list)
+
+#Make a sequence of output dates, double the length of input dates
+out_dates <-seq.POSIXt(from = x_dates[1],
+                       to = x_dates[length(x_dates)],length.out = length(x_dates)*2 )
+
+#For each output date, interpolate a raster image from the input files
+r_list_out <- ts_raster(r_list = x_list_filled,
+                        r_times = x_dates,
+                        out_times = out_dates,
+                        fade_raster = TRUE)
+#Create the frames 
+# as from the desired layers
+r_frames <- ts_makeframes(x_list = r_list_out,
+                          l_indices = c(1,4,3))
+
+# Create a line plot from the data extracted over points
+points <- SI_positions$points #Polygons of Slovenian municipalities covered by the raster
+flow_frames_point_line <- rtsVis::ts_flow_frames(r_list = r_list_out,
+ position_names = c("Ljubljana","IvanÄna Gorica","Dolenjske Toplice","LoÅ¡ki Potok"),
+ band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
+ positions = points,
+ band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
+           band_legend_title = "Wavelength [nm]",
+           position_legend_title = "ObÄina",
+           legend_position = "bottom",
+           position_legend = FALSE,
+           band_legend=TRUE,aes_by_pos = TRUE)
+
+#Check one of the frames
+flow_frames_point_line[[50]]
+
+
+# Create a violin plot from the data extracted over polygons
+polygons <- SI_positions$polygons
+flow_frames_poly_vio <-
+ rtsVis::ts_flow_frames(r_list = r_list_out,
+           position_names = c("Radece","Ljubljana","Kocevje"),
+           band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
+           positions = polygons,
+           band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
+           band_legend_title = "Wavelength [nm]",
+           position_legend_title = "ObÄina",
+           position_legend = FALSE,
+           legend_position = "left",
+           band_legend=TRUE,aes_by_pos = FALSE,
+           plot_type = "violin")
+#Check one of the frames
+flow_frames_poly_vio[[50]]
+
+}
+
+}
 \seealso{
 \code{\link{ts_raster}}
 }

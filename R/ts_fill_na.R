@@ -7,8 +7,18 @@
 #' @return A list of rasters with NAs filled.
 #' @importFrom raster approxNA
 #' @author Johannes Mast
-#' @details Iteratively loads all layers of a specific bands into a stack and uses \link[raster]{approxNA} to fill the NAs if possible. Note that the procedure requires the entire list of raster layery for each band to be be stacked. It is therefore very memory intensive and likely to fail for very large time series.
+#' @details Loads all layers of a specific bands into a stack and uses \link[raster]{approxNA} to fill the NAs if possible. Note that the procedure requires the entire list of raster layery for each band to be be stacked. It is therefore very memory intensive and likely to fail for very large time series.
 #' @export
+#' @examples 
+#' \donttest{
+#' 
+#' #Setup
+#'  library(rtsVis)
+#' x_list <- MODIS_SI_ds   #A list of raster objects
+#' 
+#' #Fill NAs
+#' x_list_filled <- ts_fill_na(x_list)
+#' }
 
 ts_fill_na <- function(x_list_fill,verbose=F,...){
   for(n_l in 1:nlayers(x_list_fill[[1]])){

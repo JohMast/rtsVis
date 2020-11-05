@@ -13,14 +13,37 @@
 #' #\deqn{(X - Low_{in}) * \frac{((High_{out}-Low_{out})}{(High_{in}-Low_{in}))}  + Low_{out}}
 #' # The stretch parameters 
 #' # \eqn{High_{out}},\eqn{Low_{out}},\eqn{High_{in}},\eqn{Low_{in}}
-#' #  are calculated seperately for each band based on the \code{minq} and \code{maxq} which are first applied to \code{samplesize} regular samples (see \link[raster]{sampleRegular}) of each individual layer.
+#' #  are calculated separately for each band based on the \code{minq} and \code{maxq} which are first applied to \code{samplesize} regular samples (see \link[raster]{sampleRegular}) of each individual layer.
 #'  From these, across all layers belonging to a certain band, the minimum and maximum values are taken as the stretching parameters for the linear stretch, which is performed using  \link[RStoolbox]{rescaleImage}.  Discrete \code{r_type}s will not be stretched.
 #'   To further enhance the plots, consider using functionalities implemented in \pkg{moveVis},
 #' (see \url{http://movevis.org/} ). For example, a northarrow may be added to all frames using \link[moveVis]{add_northarrow}.
 #' @export
 #' @author Johannes Mast
 #' @importFrom raster compareCRS nlayers 
-ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=F,l_indices=NULL){
+#' @examples 
+#' \donttest{
+#' #Setup
+#' x_list <- MODIS_SI_ds
+#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+#' 
+#' #Fill NAs
+#' x_list_filled <- ts_fill_na(x_list)
+#' 
+#' #Make a sequence of output dates, double the length of input dates
+#' out_dates <-seq.POSIXt(from = x_dates[1],
+#'                        to = x_dates[length(x_dates)],length.out = length(x_dates)*2 )
+#' 
+#' #For each output date, interpolate a raster image from the input files
+#' r_list_out <- ts_raster(r_list = x_list_filled,
+#'                         r_times = x_dates,
+#'                         out_times = out_dates,
+#'                         fade_raster = TRUE)
+#' #Create the frames 
+#' # as from the desired layers
+#'r_frames <- ts_makeframes(x_list = r_list_out,
+#'                           l_indices = c(1,4,3))
+#' }
+ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL){
   
   #If r_type not provided, guess from the first raster object in the list
   if(is.null(r_type)){

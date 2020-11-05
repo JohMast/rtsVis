@@ -9,20 +9,20 @@ aggregate <- time <- name <- value <- long  <-  lat <-   group <-  hcl.colors <-
 #'
 #' @importFrom pbapply pblapply
 #' @noRd 
-.lapply <- function(X, FUN, ..., moveVis.verbose = NULL, moveVis.n_cores = NULL, moveVis.export = NULL){
-  if(is.null(moveVis.verbose)) moveVis.verbose <- getOption("moveVis.verbose")
-  if(is.null(moveVis.n_cores)) moveVis.n_cores <- getOption("moveVis.n_cores")
+.lapply <- function(X, FUN, ..., rtsVis.verbose = NULL, rtsVis.n_cores = NULL, rtsVis.export = NULL){
+  if(is.null(rtsVis.verbose)) rtsVis.verbose <- getOption("rtsVis.verbose")
+  if(is.null(rtsVis.n_cores)) rtsVis.n_cores <- getOption("rtsVis.n_cores")
   
   # with parallelization
-  if(moveVis.n_cores > 1){
-    cl <- parallel::makeCluster(moveVis.n_cores)
-    if(!is.null(moveVis.export)) parallel::clusterExport(cl, moveVis.export)
+  if(rtsVis.n_cores > 1){
+    cl <- parallel::makeCluster(rtsVis.n_cores)
+    if(!is.null(rtsVis.export)) parallel::clusterExport(cl, rtsVis.export)
     y <- try(parallel::parLapply(cl = cl, X, FUN, ...)) # ensures that cluster is stopped appropriately
     parallel::stopCluster(cl)
     if(inherits(y, "try-error")) out(y, type = 3) else return(y)
     
     # without parallelization
-  }else if(isTRUE(moveVis.verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
+  }else if(isTRUE(rtsVis.verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
 }
 
 ##From raster
@@ -585,7 +585,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 
 
 #' line stats plot function
-#' Stolen from MoveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe, as provided by)
+#' Adapted from moveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe
 #' @noRd 
 #' @param pos_df A dataframe 
 #' @param path_legend 

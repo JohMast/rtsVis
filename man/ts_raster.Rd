@@ -25,6 +25,27 @@ a list of raster objects.
 \description{
 This function assembles a raster time series by assigning or interpolating input rasters to a target time series.
 }
+\examples{
+\donttest{
+#Setup
+ library(rtsVis)
+x_list <- MODIS_SI_ds
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+
+#Fill NAs
+x_list_filled <- ts_fill_na(x_list)
+
+#Make a sequence of output dates, double the length of input dates
+out_dates <-seq.POSIXt(from = x_dates[1],
+                       to = x_dates[length(x_dates)],length.out = length(x_dates)*2 )
+
+#For each output date, interpolate a raster image from the input files
+r_list_out <- ts_raster(r_list = x_list_filled,
+                        r_times = x_dates,
+                        out_times = out_dates,
+                        fade_raster = TRUE)
+} 
+}
 \author{
 Jakob Schwalb-Willmann, Johannes Mast
 }
