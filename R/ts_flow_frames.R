@@ -121,7 +121,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                                                 buffer= buffer,
                                                 FUN = FUN)
   
-  #For this plot, we need the data in long format
+  #For most plots we need the data in long format
   if(plot_type %in% c("violin","line")){
     extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names) 
   }
@@ -147,7 +147,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   
   
   if(plot_type=="line"){
-    flow_frames <- .ts_gg_line(pos_df = extract_df,
+    flow_frames <- .ts_gg_line(extract_df = extract_df,
                                         position_legend = position_legend,
                                         band_legend = band_legend,
                                         band_legend_title = band_legend_title,
@@ -157,15 +157,15 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                                         val_seq = val_seq,
                                         aes_by_pos=aes_by_pos)
   }else if(plot_type=="violin"){
-    flow_frames <-.ts_gg_vio(pos_df = extract_df,
+    flow_frames <-.ts_gg_vio(extract_df = extract_df,
                                         position_legend = position_legend,
                                         band_legend = band_legend,
                                         band_legend_title = band_legend_title,
                                         position_legend_title = position_legend_title,
-                                       legend_position = legend_position,
+                                        legend_position = legend_position,
                                         path_size =  path_size,
                                         val_seq = val_seq,
-                                       aes_by_pos=aes_by_pos)
+                                        aes_by_pos=aes_by_pos)
   }
 
   return(flow_frames)
