@@ -181,7 +181,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
     }
     
     # remove NAs
-    na.sel <- is.na(df$val1) & is.na(df$val2) & is.na(df$val3)
+    na.sel <- is.na(df$val1) | is.na(df$val2) | is.na(df$val3)
     if(any(na.sel)) df <- df[!na.sel,]
     
     df$fill <- grDevices::rgb(red = df$val1, green = df$val2, blue = df$val3, maxColorValue = maxColorValue)
@@ -474,11 +474,24 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @import sp
 #' @noRd
 .ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean,buffer=NULL){
-  frametimes <- .ts_get_frametimes(r_list_extract)
   
   nlay <- nlayers(r_list_extract[[1]])#get the number of layers from a template
   
+  frametimes <- .ts_get_frametimes(r_list_extract)
+  
+
   assert_that(length(r_list_extract)==length(frametimes))
+  assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
+  assert_that(!is.null(intersect(r_list_extract[[1]],positions)))
+  if(inherits(positions,"sf")){
+    positions <- as_Spatial(positions)
+  }
+  #To Do: Move away from sp to implement sf-based extraction
+  #see example down at the handling of centroids of points
+  #the same can be applied to polygons as well
+  #But for now, and for simplicitys sake, we convert all sf objects to sp
+  #and handle them consistently
+  
   
   extr_df <-  
     do.call(rbind,lapply(names(r_list_extract),
@@ -490,6 +503,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                o_name <- paste("Point", 1:nrow(positions))
                              }
                              extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,buffer=buffer)
+
                              #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                              #if so, things get more complicated
                              # we need make it a list of 1 for consitency
@@ -501,8 +515,14 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              for(i in 1:length(extr_df)){
                                extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                                extr_df[[i]]$object_name <- o_name[[i]]
-                               extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
-                               extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
+                               #if(inherits(positions,"SpatialPointsDataFrame")){  #redundant for now, just an example for later
+                                 extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                                 extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
+                               #}else if(inherits(positions,"sf")){             #redundant for now, just an example for later
+                               #  extr_df[[i]]$centr_lon <-   st_coordinates(st_centroid(positions))[,1][i] #sf variant of the above
+                               #  extr_df[[i]]$centr_lat <-   st_coordinates(st_centroid(positions))[,2][i] #sf variant of the above
+                               #}
+
                              }
                              #bind the list elements together
                              extr_df <- do.call("rbind", extr_df)
@@ -535,7 +555,6 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              extr_df <- do.call("rbind", extr_df)
                              #ensure that its a data frame
                              extr_df <- as.data.frame(extr_df)
-                             
                              
                            }else if(inherits(positions,c("matrix","array"))){
                              assert_that(ncol(positions)==2)
@@ -645,20 +664,19 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 
 #' .ts_gg_vio
 #'
-#' @description Create 
-#' @param extract_df A list of positions.
-#' @param position_legend 
-#' @param band_legend 
-#' @param band_legend_title 
-#' @param position_legend_title 
-#' @param legend_position 
-#' @param path_size 
-#' @param val_seq 
-#' @param aes_by_pos 
+#' @description Create a violin plot
+#' @param extract_df A dataframe in long format, containing extracted values
+#' @param position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param band_legend_title  (Optional) character, title of the band legend. Default is \code{"Bands"}.
+#' @param position_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param path_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param val_seq Value Sequence for the y axis.
+#' @param aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #'
 #' @return
-#' @export
-#'
+#' @noRd
 #' @examples
 .ts_gg_vio <- function(extract_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
   

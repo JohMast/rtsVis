@@ -93,10 +93,6 @@
 #' 
 #' }
 #' 
-
-
-
-
 ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,legend_position="right",band_legend=T,band_legend_title="Bands",position_legend_title="Positions",buffer=0,plot_type="line",aes_by_pos=T,FUN=mean){
   #Check: If a violin Plot is requested, no aggregation function can be used, as the full sample is required
   if(plot_type=="violin"){
@@ -109,12 +105,12 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   }
   #Ensure nice df names
   if(is.null(band_names)){
-    band_names <- paste0("Band",1:(nlayers(r_list_extract[[x]])))  #make artificial bandnames if necessary
+    band_names <- paste0("Band",1:(nlayers(r_list[[1]])))  #make artificial bandnames if necessary
   }
 
   
   ## extract the values of the raster into a long dataframe
-  extract_df <- .ts_extract_from_frames(r_list_extract = r_list,
+  extract_df <- rtsVis:::.ts_extract_from_frames(r_list_extract = r_list,
                                                 positions = positions,
                                                 position_names = position_names,
                                                 band_names = band_names,
