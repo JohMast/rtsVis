@@ -181,7 +181,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
     }
     
     # remove NAs
-    na.sel <- is.na(df$val1) & is.na(df$val2) & is.na(df$val3)
+    na.sel <- is.na(df$val1) | is.na(df$val2) | is.na(df$val3)
     if(any(na.sel)) df <- df[!na.sel,]
     
     df$fill <- grDevices::rgb(red = df$val1, green = df$val2, blue = df$val3, maxColorValue = maxColorValue)
@@ -645,20 +645,19 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 
 #' .ts_gg_vio
 #'
-#' @description Create 
-#' @param extract_df A list of positions.
-#' @param position_legend 
-#' @param band_legend 
-#' @param band_legend_title 
-#' @param position_legend_title 
-#' @param legend_position 
-#' @param path_size 
-#' @param val_seq 
-#' @param aes_by_pos 
+#' @description Create a violin plot
+#' @param extract_df A dataframe in long format, containing extracted values
+#' @param position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param band_legend_title  (Optional) character, title of the band legend. Default is \code{"Bands"}.
+#' @param position_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param path_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param val_seq Value Sequence for the y axis.
+#' @param aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #'
 #' @return
-#' @export
-#'
+#' @noRd
 #' @examples
 .ts_gg_vio <- function(extract_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
   
