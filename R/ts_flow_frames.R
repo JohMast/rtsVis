@@ -5,6 +5,7 @@
 ##'  \item{A two-column \code{matrix} of coordinates where the first column corresponds to the longitude and the second column corresponds to the latitude.}
 ##'  \item{A \code{SpatialPolygonsDataFrame} }
 ##'  \item{A \code{SpatialPointsDataFrame} }
+##'  \item{An sf object containing Points or Polygons}
 ##' }If no positions are specified, one position is assumed to be the entire extent of the rasters.
 #' @param position_names (Optional) character, names of the positions to be added in legend or text. By default, will create placeholder names by combining the object type and Id (Example: "Polygon 3")
 #' @param val_min (Optional) numeric, minimum value of the y-axis. By default chooses a rounded minimum value of the rasters contained within \code{r_list}.
@@ -17,13 +18,13 @@
 #' @param band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
 #' @param band_legend_title (Optional) character, title of the band legend. Default is \code{"Bands"}.
 #' @param position_legend_title (Optional) character, title of the band legend. Default is \code{"Positions"}.
-#' @param buffer  (Optional) numeric. The radius of a buffer around each point from which to extract cell values. See \link[raster]{extract} for more details. Default is \code{0}.
-#' @param plot_type (Optional) character, type of the plots to produce. Currently supported are \code{"line"} and \code{"violin"}. Default is \code{"line"}. 
+#' @param pbuffer  (Optional) numeric. The radius of a buffer around each object which will be applied before extraction. By default, no buffer is used.
+#' @param plot_function (Optional) character or function, type of the plots to produce. Currently supported are \code{"line"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}. 
 #' @param aes_by_pos (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
-#' @param FUN (Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_type} which map the full distribution of values the FUN is ignored.
+#' @param FUN (Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.
 #' @param path_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
 #' @details Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2]{ggplot}.
-#'  The type of the ggplot is specified by \code{plot_type}. Currently supported are \code{"line"} and \code{"violin"}.
+#'  The type of the ggplot is specified by \code{plot_function}. Currently supported are \code{"line"} and \code{"violin"} as well as custom functions which accept similar inputs.
 #'  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values. 
 #' @author Johannes Mast
 #' @import sp ggplot2
@@ -87,17 +88,29 @@
 #'            position_legend = FALSE,
 #'            legend_position = "left",
 #'            band_legend=TRUE,aes_by_pos = FALSE,
-#'            plot_type = "violin")
+#'            plot_function = "violin")
 #' #Check one of the frames
 #' flow_frames_poly_vio[[50]]
 #' 
 #' }
 #' 
-ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=0.1,path_size=1,position_legend=T,legend_position="right",band_legend=T,band_legend_title="Bands",position_legend_title="Positions",buffer=0,plot_type="line",aes_by_pos=T,FUN=mean){
-  #Check: If a violin Plot is requested, no aggregation function can be used, as the full sample is required
-  if(plot_type=="violin"){
-    FUN=NULL
+ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,path_size=1,position_legend=T,legend_position="right",band_legend=TRUE,band_legend_title="Bands",position_legend_title="Positions",pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean){
+
+  if(is.null(plot_function)){
+    stop("Please provide a plot_function. plot_function must be 'line', 'violin' or an equivalent custom function.")
+  }else{
+    if(plot_function=="line"){
+      print(paste0("Creating: ",length(r_list)," frames of line plots"))
+      plot_function <- .ts_gg_line
+    }else if(plot_function=="violin"){
+      print(paste0("Creating: ",length(r_list)," frames of violin plots"))
+      plot_function <- .ts_gg_vio
+      FUN=NULL   #No aggregation for violin plots please
+    }else if(!class(plot_function)=="function"){
+      stop("plot_function must be 'line', 'violin' or an equivalent custom function.")
+    }
   }
+
   
   #Ensure nice colors
   if(is.null(band_colors)){
@@ -109,30 +122,32 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   }
 
   
-  ## extract the values of the raster into a long dataframe
-  extract_df <- rtsVis:::.ts_extract_from_frames(r_list_extract = r_list,
+  # extract the values of the raster into a long dataframe
+  extract_df <- .ts_extract_from_frames(r_list_extract = r_list,
                                                 positions = positions,
                                                 position_names = position_names,
                                                 band_names = band_names,
-                                                buffer= buffer,
+                                                pbuffer= pbuffer,
                                                 FUN = FUN)
-  
+  #+++++++++++++++++++++++++ just to speed up testing, delete later:
+  # if(is.null(FUN)){
+  #   extract_df <- readRDS("../Beispieldaten/MODIS/WesternCape/MODIS_WesternCape_extract_df.rds")
+  # }else{
+  #   extract_df <- readRDS("../Beispieldaten/MODIS/WesternCape/MODIS_WesternCape_extract_df_mean.rds")
+  # }
+  #+++++++++++++++++++++++++
   #For most plots we need the data in long format
-  if(plot_type %in% c("violin","line")){
+  if(TRUE){
     extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names) 
   }
   #Make a df to match colors to band names
   color_matching_table <- cbind(band_names,band_colors)
   extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("name" = "band_names"),copy=T)
   
-  
-  
   ## create value sequence
   if(is.null(val_min)) val_min <- floor_dec(min(sapply(r_list, minValue), na.rm = T),level = 2)
-  if(is.null(val_max)) val_max <- ceiling_dec(max(sapply(r_list, maxValue), na.rm = T),level = 2)
-  val_digits <- nchar(strsplit(as.character(val_by), "[.]")[[1]][2])
-  if(is.na(val_digits)) val_digits <- 0
-  #val_by = NULL
+  if(is.null(val_max))val_max <- ceiling_dec(max(sapply(r_list, maxValue), na.rm = T),level = 2)
+
   if(is.null(val_by)){
     #If there are no given vals, just make four
     val_seq <- seq(val_min, val_max, length.out = 4)
@@ -141,28 +156,18 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     val_seq <- seq(val_min, val_max, by = val_by)
   }
   
-  
-  if(plot_type=="line"){
-    flow_frames <- .ts_gg_line(extract_df = extract_df,
-                                        position_legend = position_legend,
-                                        band_legend = band_legend,
-                                        band_legend_title = band_legend_title,
-                                        position_legend_title = position_legend_title,
-                                        legend_position = legend_position,
-                                        path_size =  path_size,
-                                        val_seq = val_seq,
-                                        aes_by_pos=aes_by_pos)
-  }else if(plot_type=="violin"){
-    flow_frames <-.ts_gg_vio(extract_df = extract_df,
-                                        position_legend = position_legend,
-                                        band_legend = band_legend,
-                                        band_legend_title = band_legend_title,
-                                        position_legend_title = position_legend_title,
-                                        legend_position = legend_position,
-                                        path_size =  path_size,
-                                        val_seq = val_seq,
-                                        aes_by_pos=aes_by_pos)
-  }
-
+  flow_frames <- plot_function(
+    extract_df = extract_df,
+    position_legend = position_legend,
+    band_legend = band_legend,
+    band_legend_title = band_legend_title,
+    position_legend_title = position_legend_title,
+    legend_position = legend_position,
+    path_size =  path_size,
+    val_seq = val_seq,
+    aes_by_pos = aes_by_pos
+  )
   return(flow_frames)
 }
+
+

@@ -469,11 +469,12 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param FUN A function to apply to summarize the values per position object. Default is mean.
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
-#' @importFrom raster extract
+#' @importFrom raster extract 
+#' @importFrom raster buffer
 #' @importFrom assertthat assert_that
 #' @import sp
 #' @noRd
-.ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean,buffer=NULL){
+.ts_extract_from_frames <- function(r_list_extract,positions=NULL,position_names=NULL,band_names=NULL,FUN=mean,pbuffer=NULL){
   
   nlay <- nlayers(r_list_extract[[1]])#get the number of layers from a template
   
@@ -486,23 +487,34 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   if(inherits(positions,"sf")){
     positions <- as_Spatial(positions)
   }
+  
+  if(!is.null(pbuffer)){
+    positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
+  }
+  
+  
   #To Do: Move away from sp to implement sf-based extraction
   #see example down at the handling of centroids of points
   #the same can be applied to polygons as well
   #But for now, and for simplicitys sake, we convert all sf objects to sp
   #and handle them consistently
+  all(sf::st_geometry_type(points)=="POINT")
+  positions <- st_read("../Beispieldaten/Ancillary/WesternCape/Western_Cape_polygons.shp") %>% st_transform(crs = st_crs(r_list_filled_interpolated[[1]]))
+  positions <- st_read("../Beispieldaten/Ancillary/WesternCape/Western_Cape_pts.shp") %>% st_transform(crs = st_crs(r_list_filled_interpolated[[1]]))
+  positions <- as_Spatial(st_read("../Beispieldaten/Ancillary/WesternCape/Western_Cape_pts.shp") %>% st_transform(crs = st_crs(r_list_filled_interpolated[[1]])))
+  
   
   
   extr_df <-  
     do.call(rbind,lapply(names(r_list_extract),
                          function(x) {
-                           if(inherits(positions,"SpatialPointsDataFrame")){
+                           if(inherits(positions,"SpatialPointsDataFrame")|all(sf::st_geometry_type(positions)=="POINT")){
                              if(!is.null(position_names)){
                                o_name <- position_names
                              }else{
                                o_name <- paste("Point", 1:nrow(positions))
                              }
-                             extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,buffer=buffer)
+                             extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
 
                              #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                              #if so, things get more complicated
@@ -515,13 +527,13 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              for(i in 1:length(extr_df)){
                                extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                                extr_df[[i]]$object_name <- o_name[[i]]
-                               #if(inherits(positions,"SpatialPointsDataFrame")){  #redundant for now, just an example for later
+                               if(inherits(positions,"SpatialPointsDataFrame")){ 
                                  extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                                  extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
-                               #}else if(inherits(positions,"sf")){             #redundant for now, just an example for later
-                               #  extr_df[[i]]$centr_lon <-   st_coordinates(st_centroid(positions))[,1][i] #sf variant of the above
-                               #  extr_df[[i]]$centr_lat <-   st_coordinates(st_centroid(positions))[,2][i] #sf variant of the above
-                               #}
+                               }else if(inherits(positions,"sf")){           
+                                 extr_df[[i]]$centr_lon <-   st_coordinates(positions)[,1][i] #sf variant of the above
+                                 extr_df[[i]]$centr_lat <-   st_coordinates(positions)[,2][i] #sf variant of the above
+                               }
 
                              }
                              #bind the list elements together
@@ -529,7 +541,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              #ensure that its a data frame
                              extr_df <- as.data.frame(extr_df)
                              
-                           }else if(inherits(positions,"SpatialPolygonsDataFrame")){
+                           }else if(inherits(positions,"SpatialPolygonsDataFrame")|all(sf::st_geometry_type(positions)=="MULTIPOLYGON") |all(sf::st_geometry_type(positions)=="POLYGON")){
                              
                              if(!is.null(position_names)){
                                o_name <- position_names
@@ -548,8 +560,14 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              for(i in 1:length(extr_df)){
                                extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                                extr_df[[i]]$object_name <- o_name[[i]]
-                               extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
-                               extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
+                               
+                               if(inherits(positions,"SpatialPointsDataFrame")){ 
+                                 extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
+                                 extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
+                               }else if(inherits(positions,"sf")){           
+                                 extr_df[[i]]$centr_lon <-   st_coordinates(st_centroid(st_geometry(positions)))[,1][i] #sf variant of the above
+                                 extr_df[[i]]$centr_lat <-   st_coordinates(st_centroid(st_geometry(positions)))[,2][i] #sf variant of the above
+                               }
                              }
                              #bind the list elements together
                              extr_df <- do.call("rbind", extr_df)
@@ -603,6 +621,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 
 
 
+
 #' line stats plot function
 #' Adapted from moveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe
 #' @noRd 
@@ -634,12 +653,12 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
       theme(aspect.ratio = 1) +
       scale_y_continuous(expand = c(0,0), breaks = vs)+
       theme(legend.position = lp)
-
-      #add the colors
-      p <- p +
-        scale_colour_manual(values = x$band_colors,breaks = x$name, name=blt)
-
-
+    
+    #add the colors
+    p <- p +
+      scale_colour_manual(values = x$band_colors,breaks = x$name, name=blt)
+    
+    
     ## add legend
     if(!isTRUE(pl)){
       p <- p + guides(linetype = FALSE)
@@ -674,10 +693,9 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 #' @param path_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
 #' @param val_seq Value Sequence for the y axis.
 #' @param aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
-#'
 #' @return
 #' @noRd
-#' @examples
+
 .ts_gg_vio <- function(extract_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
   
   ## stats plot function
@@ -692,6 +710,8 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
       
     }
     
+    #To avoid facets overlapping, give 1/8th the total range as y expand 
+    y_expand <-  (max(vs, na.rm = T) - min(vs, na.rm = T))/8
     #Style the plot
     p <-p +
       geom_violin( size = ps, show.legend = T)+  
@@ -701,7 +721,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
       theme(axis.title.x=element_blank(),
             axis.text.x=element_blank(),
             axis.ticks.x=element_blank())+
-      scale_y_continuous(expand = c(0,0), breaks = vs)+
+      scale_y_continuous(expand = c(0,1000), breaks = vs)+
       facet_grid(object_name ~ name, scales='free')+
       theme(legend.position = lp)
     

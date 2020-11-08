@@ -124,7 +124,14 @@
 #' }
 ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL,pcol="red",tcol="red",psize=2,tsize=7,ttype="text",t_hjust=0,t_vjust=0,position_legend_title = "Position",legend_position="right",aes_by_pos=F,add_text=F){
   
-  
+  if(inherits(positions,"sf")){
+    positions <- as_Spatial(positions)
+  }
+  #To Do: Move away from sp to implement sf-based extraction
+  #see example down at the handling of centroids of points
+  #the same can be applied to polygons as well
+  #But for now, and for simplicitys sake, we convert all sf objects to sp
+  #and handle them consistently
   
   if(inherits(positions,"SpatialPolygonsDataFrame")){
     data <-  fortify(positions);data$id <- as.factor(data$id)

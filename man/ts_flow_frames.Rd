@@ -12,16 +12,16 @@ ts_flow_frames(
   band_colors = NULL,
   val_min = NULL,
   val_max = NULL,
-  val_by = 0.1,
+  val_by = NULL,
   path_size = 1,
   position_legend = T,
   legend_position = "right",
-  band_legend = T,
+  band_legend = TRUE,
   band_legend_title = "Bands",
   position_legend_title = "Positions",
-  buffer = 0,
-  plot_type = "line",
-  aes_by_pos = T,
+  pbuffer = NULL,
+  plot_function = "line",
+  aes_by_pos = TRUE,
   FUN = mean
 )
 }
@@ -32,6 +32,7 @@ ts_flow_frames(
  \item{A two-column \code{matrix} of coordinates where the first column corresponds to the longitude and the second column corresponds to the latitude.}
  \item{A \code{SpatialPolygonsDataFrame} }
  \item{A \code{SpatialPointsDataFrame} }
+ \item{An sf object containing Points or Polygons}
 }If no positions are specified, one position is assumed to be the entire extent of the rasters.}
 
 \item{position_names}{(Optional) character, names of the positions to be added in legend or text. By default, will create placeholder names by combining the object type and Id (Example: "Polygon 3")}
@@ -58,13 +59,13 @@ ts_flow_frames(
 
 \item{position_legend_title}{(Optional) character, title of the band legend. Default is \code{"Positions"}.}
 
-\item{buffer}{(Optional) numeric. The radius of a buffer around each point from which to extract cell values. See \link[raster]{extract} for more details. Default is \code{0}.}
+\item{pbuffer}{(Optional) numeric. The radius of a buffer around each object which will be applied before extraction. By default, no buffer is used.}
 
-\item{plot_type}{(Optional) character, type of the plots to produce. Currently supported are \code{"line"} and \code{"violin"}. Default is \code{"line"}.}
+\item{plot_function}{(Optional) character or function, type of the plots to produce. Currently supported are \code{"line"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}.}
 
 \item{aes_by_pos}{(Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.}
 
-\item{FUN}{(Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_type} which map the full distribution of values the FUN is ignored.}
+\item{FUN}{(Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.}
 }
 \value{
 A list of ggplots, one for each element of \code{r_list}.
@@ -74,7 +75,7 @@ Create a series of charts of a raster time series
 }
 \details{
 Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2]{ggplot}.
- The type of the ggplot is specified by \code{plot_type}. Currently supported are \code{"line"} and \code{"violin"}.
+ The type of the ggplot is specified by \code{plot_function}. Currently supported are \code{"line"} and \code{"violin"} as well as custom functions which accept similar inputs.
  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values.
 }
 \examples{
@@ -132,7 +133,7 @@ flow_frames_poly_vio <-
            position_legend = FALSE,
            legend_position = "left",
            band_legend=TRUE,aes_by_pos = FALSE,
-           plot_type = "violin")
+           plot_function = "violin")
 #Check one of the frames
 flow_frames_poly_vio[[50]]
 
