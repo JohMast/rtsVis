@@ -5,6 +5,7 @@
 ##'  \item{A two-column \code{matrix} of coordinates where the first column corresponds to the longitude and the second column corresponds to the latitude.}
 ##'  \item{A \code{SpatialPolygonsDataFrame} from which \link[sp]{coordinates} can be extracted.}
 ##'  \item{A \code{SpatialPointsDataFrame} from which \link[sp]{coordinates} can be extracted.}
+##'  \item{An sf object containing \code{POINTS},\code{POLYGONS} or \code{MULTIPOLYGONS}}
 ##' }
 #' @param position_names (Optional) character, names of the positions to be added in legend or text (If \code{add_text}). By default, will create placeholder names by combining the object type and Id (Example: *"Polygon 3"*)
 #' @param pcol (Optional) character, color of the spatial objects. Default is \code{"red"}.
@@ -26,6 +27,7 @@
 #' @seealso \link[moveVis]{add_text} \link[moveVis]{add_gg}
 #' @importFrom moveVis add_text add_gg
 #' @importFrom sp coordinates
+#' @importFrom sf st_centroid st_coordinates st_geometry
 #' @import ggplot2
 #' @author Johannes Mast
 #' @return A list of ggplots with added positions.
@@ -125,15 +127,58 @@
 ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL,pcol="red",tcol="red",psize=2,tsize=7,ttype="text",t_hjust=0,t_vjust=0,position_legend_title = "Position",legend_position="right",aes_by_pos=F,add_text=F){
   
   if(inherits(positions,"sf")){
-    positions <- as_Spatial(positions)
-  }
-  #To Do: Move away from sp to implement sf-based extraction
-  #see example down at the handling of centroids of points
-  #the same can be applied to polygons as well
-  #But for now, and for simplicitys sake, we convert all sf objects to sp
-  #and handle them consistently
-  
-  if(inherits(positions,"SpatialPolygonsDataFrame")){
+    if(all(sf::st_geometry_type(positions)=="POINT")){
+      data <- data.frame(long=st_coordinates(positions)[,1],lat=st_coordinates(positions)[,2],group=as.factor(seq(1,nrow(positions))))
+      if(is.null(position_names)){
+        position_names <- paste("Point" ,(1:nrow(positions)))
+      }else{
+        position_names <- as.factor(position_names)
+      }
+      levels(data$group) <- position_names
+      
+      if(aes_by_pos){
+        outlist <- moveVis::add_gg(r_frame_list, gg = expr(
+          list(
+            geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
+            scale_shape_discrete(name = position_legend_title),
+            theme(legend.position = legend_position)
+          )
+        ),data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)     
+      }else{
+        outlist <- moveVis::add_gg(r_frame_list, gg = expr(
+          list(
+            geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
+          )
+        ),data = data,pcol=pcol,psize=psize)
+      }
+    }else if(all(sf::st_geometry_type(positions)=="MULTIPOLYGON") | all(sf::st_geometry_type(positions)=="POLYGON")){
+      data <- positions; data$id <- as.factor(1:nrow(positions))
+      if(is.null(position_names)){
+        position_names <- paste("Polygon" ,(1:nrow(positions)))
+      }else{
+        position_names <- as.factor(position_names)
+      }
+      levels(data$id) <- position_names
+      
+      if(aes_by_pos){
+        outlist <- moveVis::add_gg(r_frame_list, gg = expr(
+          list(
+            geom_sf(data = data,mapping = aes( color=pcol,size=psize,linetype=id),fill=NA),
+            scale_linetype_discrete(name = position_legend_title),
+            guides(size=FALSE,color=FALSE),
+            theme(legend.position = legend_position)
+          )
+        ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)
+      }else{
+        outlist <- moveVis::add_gg(r_frame_list, gg = expr(
+          list(
+            geom_sf(data = data,mapping = aes( color=pcol,size=psize),fill=NA),
+            guides(size=FALSE,color=FALSE)
+          )
+        ), data = data,pcol=pcol,psize=psize)
+      }
+    }
+  }else if(inherits(positions,"SpatialPolygonsDataFrame")){
     data <-  fortify(positions);data$id <- as.factor(data$id)
     if(is.null(position_names)){
       position_names <- paste("Polygon" ,(1:nrow(positions)))
@@ -208,7 +253,8 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
         )
       ), data = data,pcol=pcol,psize=psize)
     }
-    
+  }else{
+    print("positions must be an object of sf, sp, or a matrix.")
   }
   
   
@@ -218,13 +264,13 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
       if(inherits(positions,c("matrix","array"))){
         xcord <- (positions[i,])[1]+t_vjust
         ycord <- (positions[i,])[2]+t_hjust
-      }else{
+      }else if(inherits(positions,"SpatialPolygonsDataFrame")|inherits(positions,"SpatialPointsDataFrame")){
         xcord <- coordinates(positions[i,])[1]+t_vjust
         ycord <- coordinates(positions[i,])[2]+t_hjust
+      }else if(inherits(positions,"sf")){
+        xcord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][1]+t_vjust
+        ycord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][2]+t_hjust
       }
-
-      
-      
       outlist <- moveVis::add_text(outlist, as.character(position_names[i]), x =xcord, y = ycord,
                       colour = tcol, size = tsize,type = ttype)
     }

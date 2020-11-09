@@ -5,7 +5,7 @@
 ##'  \item{A two-column \code{matrix} of coordinates where the first column corresponds to the longitude and the second column corresponds to the latitude.}
 ##'  \item{A \code{SpatialPolygonsDataFrame} }
 ##'  \item{A \code{SpatialPointsDataFrame} }
-##'  \item{An sf object containing Points or Polygons}
+##'  \item{An sf object containing \code{POINTS},\code{POLYGONS} or \code{MULTIPOLYGONS}}
 ##' }If no positions are specified, one position is assumed to be the entire extent of the rasters.
 #' @param position_names (Optional) character, names of the positions to be added in legend or text. By default, will create placeholder names by combining the object type and Id (Example: "Polygon 3")
 #' @param val_min (Optional) numeric, minimum value of the y-axis. By default chooses a rounded minimum value of the rasters contained within \code{r_list}.

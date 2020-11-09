@@ -19,6 +19,7 @@ Imports:
   dplyr,
   pbapply,
   sp,
+  sf,
   tidyr,
   assertthat
 BugReports:  https://github.com/16eagle/rtsVis/issues

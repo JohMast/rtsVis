@@ -470,6 +470,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
 #' @importFrom raster extract 
+#' @importFrom sf st_centroid st_coordinates st_geometry
 #' @importFrom raster buffer
 #' @importFrom assertthat assert_that
 #' @import sp
@@ -492,29 +493,20 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
   }
   
-  
-  #To Do: Move away from sp to implement sf-based extraction
-  #see example down at the handling of centroids of points
-  #the same can be applied to polygons as well
-  #But for now, and for simplicitys sake, we convert all sf objects to sp
-  #and handle them consistently
-  all(sf::st_geometry_type(points)=="POINT")
-  positions <- st_read("../Beispieldaten/Ancillary/WesternCape/Western_Cape_polygons.shp") %>% st_transform(crs = st_crs(r_list_filled_interpolated[[1]]))
-  positions <- st_read("../Beispieldaten/Ancillary/WesternCape/Western_Cape_pts.shp") %>% st_transform(crs = st_crs(r_list_filled_interpolated[[1]]))
-  positions <- as_Spatial(st_read("../Beispieldaten/Ancillary/WesternCape/Western_Cape_pts.shp") %>% st_transform(crs = st_crs(r_list_filled_interpolated[[1]])))
-  
-  
-  
   extr_df <-  
     do.call(rbind,lapply(names(r_list_extract),
                          function(x) {
-                           if(inherits(positions,"SpatialPointsDataFrame")|all(sf::st_geometry_type(positions)=="POINT")){
+                           if(inherits(positions,"SpatialPointsDataFrame")|all(st_geometry_type(positions)=="POINT")){
                              if(!is.null(position_names)){
                                o_name <- position_names
                              }else{
                                o_name <- paste("Point", 1:nrow(positions))
                              }
-                             extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                             
+                             #Extract the Values, !!suppressing warnings which are currently caused by discarded datums due to Proj4->proj6 switch!!
+                             extr_df <-suppressWarnings(
+                               raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                             )
 
                              #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                              #if so, things get more complicated
@@ -541,7 +533,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              #ensure that its a data frame
                              extr_df <- as.data.frame(extr_df)
                              
-                           }else if(inherits(positions,"SpatialPolygonsDataFrame")|all(sf::st_geometry_type(positions)=="MULTIPOLYGON") |all(sf::st_geometry_type(positions)=="POLYGON")){
+                           }else if(inherits(positions,"SpatialPolygonsDataFrame")|all(st_geometry_type(positions)=="MULTIPOLYGON") |all(st_geometry_type(positions)=="POLYGON")){
                              
                              if(!is.null(position_names)){
                                o_name <- position_names
@@ -561,7 +553,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                                extr_df[[i]]$object_name <- o_name[[i]]
                                
-                               if(inherits(positions,"SpatialPointsDataFrame")){ 
+                               if(inherits(positions,"SpatialPolygonsDataFrame")){ 
                                  extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                                  extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
                                }else if(inherits(positions,"sf")){           
