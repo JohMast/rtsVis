@@ -28,6 +28,7 @@ ts_add_positions_to_frames(
  \item{A two-column \code{matrix} of coordinates where the first column corresponds to the longitude and the second column corresponds to the latitude.}
  \item{A \code{SpatialPolygonsDataFrame} from which \link[sp]{coordinates} can be extracted.}
  \item{A \code{SpatialPointsDataFrame} from which \link[sp]{coordinates} can be extracted.}
+ \item{An sf object containing \code{POINTS},\code{POLYGONS} or \code{MULTIPOLYGONS}}
 }}
 
 \item{position_names}{(Optional) character, names of the positions to be added in legend or text (If \code{add_text}). By default, will create placeholder names by combining the object type and Id (Example: *"Polygon 3"*)}
@@ -61,7 +62,7 @@ A list of ggplots with added positions.
 Add points, coordinates, or polygons to a list of spatial plots
 }
 \details{
-The function takes a \code{positions} object, which can be a spatial object or a matrix of coordinates, and adds them to each of the elements of \code{r_frame_list} using \link[moveVis]{add_gg}. Optionally it also adds text at their respective positions using\link[moveVis]{add_text}.
+The function takes a \code{positions} object, which can be a spatial object or a matrix of coordinates, and adds them to each of the elements of \code{r_frame_list}. Optionally it also adds text at their respective positions using\link[moveVis]{add_text}.
 
 - \code{ts_add_positions_to_frames} is intended to be an easy way to add multiple objects to the spatial frames at fixed positions. 
 For adding individual positions or text, potentially at varying positions, it is recommended to all \link[moveVis]{add_gg} and \link[moveVis]{add_text} directly.

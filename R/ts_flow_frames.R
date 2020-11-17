@@ -96,21 +96,25 @@
 #' 
 ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,path_size=1,position_legend=T,legend_position="right",band_legend=TRUE,band_legend_title="Bands",position_legend_title="Positions",pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean){
 
-  if(is.null(plot_function)){
-    stop("Please provide a plot_function. plot_function must be 'line', 'violin' or an equivalent custom function.")
-  }else{
-    if(plot_function=="line"){
-      print(paste0("Creating: ",length(r_list)," frames of line plots"))
-      plot_function <- .ts_gg_line
-    }else if(plot_function=="violin"){
-      print(paste0("Creating: ",length(r_list)," frames of violin plots"))
-      plot_function <- .ts_gg_vio
-      FUN=NULL   #No aggregation for violin plots please
-    }else if(!class(plot_function)=="function"){
+  if (is.null(plot_function)) {
+    stop(
+      "Please provide a plot_function. plot_function must be 'line', 'violin' or an equivalent custom function."
+    )
+  } else{
+    if (class(plot_function) == "character") {
+      if (plot_function == "line") {
+        print(paste0("Creating: ", length(r_list), " frames of line plots"))
+        plot_function <- .ts_gg_line
+      } else if (plot_function == "violin") {
+        print(paste0("Creating: ", length(r_list), " frames of violin plots"))
+        plot_function <- .ts_gg_vio
+        FUN = NULL   #No aggregation for violin plots please
+      }
+    } else if (!class(plot_function) == "function") {
       stop("plot_function must be 'line', 'violin' or an equivalent custom function.")
     }
   }
-
+  
   
   #Ensure nice colors
   if(is.null(band_colors)){
@@ -129,13 +133,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                                                 band_names = band_names,
                                                 pbuffer= pbuffer,
                                                 FUN = FUN)
-  #+++++++++++++++++++++++++ just to speed up testing, delete later:
-  # if(is.null(FUN)){
-  #   extract_df <- readRDS("../Beispieldaten/MODIS/WesternCape/MODIS_WesternCape_extract_df.rds")
-  # }else{
-  #   extract_df <- readRDS("../Beispieldaten/MODIS/WesternCape/MODIS_WesternCape_extract_df_mean.rds")
-  # }
-  #+++++++++++++++++++++++++
+
   #For most plots we need the data in long format
   if(TRUE){
     extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names) 
