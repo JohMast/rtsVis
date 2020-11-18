@@ -485,9 +485,6 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   assert_that(length(r_list_extract)==length(frametimes))
   assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
   assert_that(!is.null(intersect(r_list_extract[[1]],positions)))
-  # if(inherits(positions,"sf")){
-  #   positions <- as_Spatial(positions)
-  # }
   
   if(!is.null(pbuffer)){
     if(inherits(positions, "sf")){
@@ -503,7 +500,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     do.call(rbind,lapply(names(r_list_extract),
                          function(x) {
                            if(inherits(positions, "sf")){
-                             if(all(st_geometry_type(positions)=="MULTIPOLYGON") |all(st_geometry_type(positions)=="POLYGON")){
+                             if(all(st_geometry_type(positions) %in% c("MULTIPOLYGON", "POLYGON") )){
                                if(!is.null(position_names)){
                                  o_name <- position_names
                                }else{
@@ -894,8 +891,6 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
       
     }
     
-    #To avoid facets overlapping, give 1/8th the total range as y expand 
-    y_expand <-  (max(vs, na.rm = T) - min(vs, na.rm = T))/8
     #Style the plot
     p <-p +
       geom_violin( size = ps, show.legend = T)+  

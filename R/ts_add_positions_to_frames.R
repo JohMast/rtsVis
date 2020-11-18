@@ -160,7 +160,7 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
           )
         ),data = data,pcol=pcol,psize=psize,crs=st_crs(positions))
       }
-    }else if(all(sf::st_geometry_type(positions)=="MULTIPOLYGON") | all(sf::st_geometry_type(positions)=="POLYGON")){
+    }else if(all(st_geometry_type(positions) %in% c("MULTIPOLYGON", "POLYGON") )){
       data <- positions; data$id <- as.factor(1:nrow(positions))
       if(is.null(position_names)){
         position_names <- paste("Polygon" ,(1:nrow(positions)))
