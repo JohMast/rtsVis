@@ -118,7 +118,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   
   #Ensure nice colors
   if(is.null(band_colors)){
-    band_colors <-  hcl.colors(nrow(positions))
+    band_colors <-  hcl.colors((nlayers(r_list[[1]])))
   }
   #Ensure nice df names
   if(is.null(band_names)){
@@ -165,6 +165,8 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     val_seq = val_seq,
     aes_by_pos = aes_by_pos
   )
+  
+  
   return(flow_frames)
 }
 
