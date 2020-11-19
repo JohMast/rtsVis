@@ -882,6 +882,12 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
   ## stats plot function
   gg.fun <- function(x,pl,lp, bl, blt,plt, ps, vs,abp){
     
+    
+    x %>% group_by(object_name,name)%>% group_size() %>% min() -> n_value_min
+    if(n_value_min<10){
+      warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
+    }
+    
     ## generate base plot, either with position mapped to linetype or without
     if(!isTRUE(abp)){
       p <- ggplot(x, aes(x = 1, y = value,group = interaction(object_name,name),colour=name))
