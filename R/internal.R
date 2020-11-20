@@ -1,7 +1,7 @@
 #' NULL declaration to suppres R CMD CHECK warning related to tidyverse syntax
 #' @keywords internal
 #' @noRd
-aggregate <- time <- name <- value <- long  <-  lat <-   group <-  hcl.colors <- r_list_extract <-  x <-  minValue <-  maxValue <- quantile <-object_name  <- id <-  NULL
+aggregate <- time <- name <- band <- value <- long  <-  lat <-   group <-  hcl.colors <- r_list_extract <-  x <-  minValue <-  maxValue <- quantile <-position_name  <- id <-  NULL
 
 
 ##From moveVis
@@ -517,7 +517,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
                                  extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                                 extr_df[[i]]$object_name <- o_name[[i]]
+                                 extr_df[[i]]$position_name <- o_name[[i]]
                                  extr_df[[i]]$centr_lon <-   st_coordinates(st_centroid(st_geometry(positions)))[,1][i] #sf variant of the above
                                  extr_df[[i]]$centr_lat <-   st_coordinates(st_centroid(st_geometry(positions)))[,2][i] #sf variant of the above
                                }
@@ -547,7 +547,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
                                  extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                                 extr_df[[i]]$object_name <- o_name[[i]]
+                                 extr_df[[i]]$position_name <- o_name[[i]]
                                  extr_df[[i]]$centr_lon <-   st_coordinates(positions)[,1][i] #sf variant of the above
                                  extr_df[[i]]$centr_lat <-   st_coordinates(positions)[,2][i] #sf variant of the above
                                }
@@ -579,7 +579,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              #add the object name to the respective list element
                              for(i in 1:length(extr_df)){
                                extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                               extr_df[[i]]$object_name <- o_name[[i]]
+                               extr_df[[i]]$position_name <- o_name[[i]]
                                extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                                extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
                              }
@@ -605,7 +605,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              #add the object name to the respective list element
                              for(i in 1:length(extr_df)){
                                extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                               extr_df[[i]]$object_name <- o_name[[i]]
+                               extr_df[[i]]$position_name <- o_name[[i]]
                                extr_df[[i]]$centr_lon <-   st_coordinates(st_centroid(st_geometry(positions)))[,1][i] #sf variant of the above
                                extr_df[[i]]$centr_lat <-   st_coordinates(st_centroid(st_geometry(positions)))[,2][i] #sf variant of the above
                              }
@@ -632,7 +632,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              #add the object name to the respective list element
                              for(i in 1:length(extr_df)){
                                extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                               extr_df[[i]]$object_name <- o_name[[i]]
+                               extr_df[[i]]$position_name <- o_name[[i]]
                                extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                                extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
                              }
@@ -645,7 +645,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              extr_df <- as.data.frame(matrix( raster::cellStats(r_list_extract[[x]],FUN),nrow = 1,byrow = T)) #unpiped
                              extr_df$lon <- mean(extent(r_list_extract[[x]])[1:2])
                              extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
-                             extr_df$object_name <- "AOI"
+                             extr_df$position_name <- "AOI"
                              extr_df$centr_lon <- 0  #2do: add the centroid coords or sth equivalent
                              extr_df$centr_lat <- 0  #2do: add the centroid coords or sth equivalent
                            }
@@ -707,7 +707,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                          #     #add the object name to the respective list element
                          #     for(i in 1:length(extr_df)){
                          #       extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                         #       extr_df[[i]]$object_name <- o_name[[i]]
+                         #       extr_df[[i]]$position_name <- o_name[[i]]
                          #       if(inherits(positions,"SpatialPointsDataFrame")){ 
                          #         extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                          #         extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
@@ -740,7 +740,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                          #     #add the object name to the respective list element
                          #     for(i in 1:length(extr_df)){
                          #       extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                         #       extr_df[[i]]$object_name <- o_name[[i]]
+                         #       extr_df[[i]]$position_name <- o_name[[i]]
                          #       
                          #       if(inherits(positions,"SpatialPolygonsDataFrame")){ 
                          #         extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
@@ -773,7 +773,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                          #     #add the object name to the respective list element
                          #     for(i in 1:length(extr_df)){
                          #       extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                         #       extr_df[[i]]$object_name <- o_name[[i]]
+                         #       extr_df[[i]]$position_name <- o_name[[i]]
                          #       extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                          #       extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
                          #     }
@@ -786,7 +786,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                          #     extr_df <- as.data.frame(matrix( raster::cellStats(r_list_extract[[x]],FUN),nrow = 1,byrow = T)) #unpiped
                          #     extr_df$lon <- mean(extent(r_list_extract[[x]])[1:2])
                          #     extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
-                         #     extr_df$object_name <- "AOI"
+                         #     extr_df$position_name <- "AOI"
                          #     extr_df$centr_lon <- 0  #2do: add the centroid coords or sth equivalent
                          #     extr_df$centr_lat <- 0  #2do: add the centroid coords or sth equivalent
                          #   }
@@ -805,55 +805,57 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 
 #' line stats plot function
 #' Adapted from moveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe
-#' @noRd 
-#' @param extract_df A dataframe 
-#' @param path_legend 
-#' @param band_legend_title 
-#' @param path_size 
-#' @param val_seq 
-#' @importFrom ggplot2 ggplot geom_path aes_string theme scale_fill_identity scale_y_continuous scale_x_continuous scale_colour_manual theme_bw coord_cartesian geom_bar
+#' @param i the index of the current frame
+#' @param edf a dataframe of all extracted values across all frames
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param vs val_seq Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #' @noRd
-.ts_gg_line <- function(extract_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
+.ts_gg_line <- function(i, edf , pl,lp, bl, blt,plt, ps, vs,abp){
   
-  ## stats plot function
-  gg.fun <- function(x, y, pl,lp, bl, blt,plt, ps, vs,abp){
+  #The data up to the current frame (this will be plotted)
+  x = edf[edf$frame <= i,]
+  #All data (this sets the frame)
+  y=edf
+  
+  ## generate base plot, either with position mapped to linetype or without
+  if(!isTRUE(abp)){
+    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),colour=band))
+  }else{
+    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=position_name,colour=band))+
+      scale_linetype_discrete(name=plt)
     
-    ## generate base plot, either with position mapped to linetype or without
-    if(!isTRUE(abp)){
-      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),colour=name))
-    }else{
-      p <- ggplot(x, aes(x = time, y = value,group = interaction(object_name,name),linetype=object_name,colour=name))+
-        scale_linetype_discrete(name=plt)
-      
-    }
-    ## style it
-    p <- p +
-      geom_path( size = ps, show.legend = T)+  
-      coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
-      theme_bw() + 
-      theme(aspect.ratio = 1) +
-      scale_y_continuous(expand = c(0,0), breaks = vs)+
-      theme(legend.position = lp)
-    
-    #add the colors
-    p <- p +
-      scale_colour_manual(values = x$band_colors,breaks = x$name, name=blt)
-    
-    
-    ## add legend
-    if(!isTRUE(pl)){
-      p <- p + guides(linetype = FALSE)
-    }  
-    if(!isTRUE(bl)){
-      p <- p + guides(colour = FALSE)
-    }  
-    return(p)
   }
+  ## style it
+  p <- p +
+    geom_path( size = ps, show.legend = T)+  
+    coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+    theme_bw() + 
+    theme(aspect.ratio = 1) +
+    scale_y_continuous(expand = c(0,0), breaks = vs)+
+    theme(legend.position = lp)
   
-  .lapply(1:max(extract_df$frame), function(i, x = extract_df, bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
-    gg.fun(x = extract_df[extract_df$frame <= i,], y = extract_df,bl = band_legend, pl = position_legend, lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
-  })
+  #add the colors
+  p <- p +
+    scale_colour_manual(values = x$band_colors,breaks = x$band, name=blt)
+  
+  
+  ## add legend
+  if(!isTRUE(pl)){
+    p <- p + guides(linetype = FALSE)
+  }  
+  if(!isTRUE(bl)){
+    p <- p + guides(colour = FALSE)
+  }  
+  return(p)
 }
+
+
 
 #Aux function for rounding significant digits, credit to 
 #https://stackoverflow.com/a/39611375
@@ -865,70 +867,64 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 #' .ts_gg_vio
 #'
 #' @description Create a violin plot
-#' @param extract_df A dataframe in long format, containing extracted values
-#' @param position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
-#' @param band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
-#' @param band_legend_title  (Optional) character, title of the band legend. Default is \code{"Bands"}.
-#' @param position_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
-#' @param legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
-#' @param path_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
-#' @param val_seq Value Sequence for the y axis.
-#' @param aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @param i the index of the current frame
+#' @param edf a dataframe of all extracted values across all frames
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param vs val_seq Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #' @return
 #' @noRd
-
-.ts_gg_vio <- function(extract_df, position_legend,band_legend, band_legend_title, position_legend_title, legend_position, path_size, val_seq,aes_by_pos=F){
+.ts_gg_vio <- function(i,edf,pl,lp, bl, blt,plt, ps, vs,abp){
   
-  ## stats plot function
-  gg.fun <- function(x,pl,lp, bl, blt,plt, ps, vs,abp){
-    
-    
-    x %>% group_by(object_name,name)%>% group_size() %>% min() -> n_value_min
-    if(n_value_min<10){
-      warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
-    }
-    
-    ## generate base plot, either with position mapped to linetype or without
-    if(!isTRUE(abp)){
-      p <- ggplot(x, aes(x = 1, y = value,group = interaction(object_name,name),colour=name))
-    }else{
-      p <- ggplot(x, aes(x = 1, y = value,group = interaction(object_name,name),linetype=object_name,colour=name))+
-        scale_linetype_discrete(name=plt)
-      
-    }
-    
-    #Style the plot
-    p <-p +
-      geom_violin( size = ps, show.legend = T)+  
-      coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
-      theme_bw() + 
-      theme(aspect.ratio = 1) +
-      theme(axis.title.x=element_blank(),
-            axis.text.x=element_blank(),
-            axis.ticks.x=element_blank())+
-      scale_y_continuous(expand = c(0,1000), breaks = vs)+
-      facet_grid(object_name ~ name, scales='free')+
-      theme(legend.position = lp)
-    
-    #add the colors
-    p <- p +
-      scale_colour_manual(values = x$band_colors,breaks = x$name, name=blt)
-    
-    
-    ## add legend
-    if(!isTRUE(pl)){
-      p <- p + guides(linetype = FALSE)
-    }  
-    if(!isTRUE(bl)){
-      p <- p + guides(colour = FALSE)
-    }  
-    return(p)
+  x <- edf[edf$frame == i,]
+  
+  x %>% group_by(position_name,band)%>% group_size() %>% min() -> n_value_min
+  if(n_value_min<10){
+    warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
   }
   
-  .lapply(1:max(extract_df$frame), function(i, x = extract_df, bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos){
-    gg.fun(x = extract_df[extract_df$frame == i,],bl = band_legend, pl = position_legend,lp = legend_position, blt = band_legend_title, plt=position_legend_title, ps = path_size, vs = val_seq,abp=aes_by_pos)
-  })
+  ## generate base plot, either with position mapped to linetype or without
+  if(!isTRUE(abp)){
+    p <- ggplot(x, aes(x = 1, y = value,group = interaction(position_name,band),colour=band))
+  }else{
+    p <- ggplot(x, aes(x = 1, y = value,group = interaction(position_name,band),linetype=position_name,colour=band))+
+      scale_linetype_discrete(name=plt)
+    
+  }
+  
+  #Style the plot
+  p <-p +
+    geom_violin( size = ps, show.legend = T)+  
+    coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+    theme_bw() + 
+    theme(aspect.ratio = 1) +
+    theme(axis.title.x=element_blank(),
+          axis.text.x=element_blank(),
+          axis.ticks.x=element_blank())+
+    scale_y_continuous(expand = c(0,1000), breaks = vs)+
+    facet_grid(position_name ~ band, scales='free')+
+    theme(legend.position = lp)
+  
+  #add the colors
+  p <- p +
+    scale_colour_manual(values = x$band_colors,breaks = x$band, name=blt)
+  
+  
+  ## add legend
+  if(!isTRUE(pl)){
+    p <- p + guides(linetype = FALSE)
+  }  
+  if(!isTRUE(bl)){
+    p <- p + guides(colour = FALSE)
+  }  
+  return(p)
 }
+
 
 
 

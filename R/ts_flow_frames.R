@@ -22,7 +22,7 @@
 #' @param plot_function (Optional) character or function, type of the plots to produce. Currently supported are \code{"line"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}. 
 #' @param aes_by_pos (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #' @param FUN (Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.
-#' @param path_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
 #' @details Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2]{ggplot}.
 #'  The type of the ggplot is specified by \code{plot_function}. Currently supported are \code{"line"} and \code{"violin"} as well as custom functions which accept similar inputs.
 #'  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values. 
@@ -94,7 +94,7 @@
 #' 
 #' }
 #' 
-ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,path_size=1,position_legend=T,legend_position="right",band_legend=TRUE,band_legend_title="Bands",position_legend_title="Positions",pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean){
+ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean,...){
 
   if (is.null(plot_function)) {
     stop(
@@ -126,6 +126,33 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   }
 
   
+  #Should legends be plotted? By Default no.
+  if(is.null(band_legend)){
+    if(is.null(band_legend_title)){
+      band_legend=FALSE
+    }else{
+      band_legend=TRUE
+    }
+  }
+  if(is.null(position_legend)){
+    if(is.null(position_legend_title)){
+      position_legend=FALSE
+    }else{
+      position_legend=TRUE
+    }
+  }
+  
+  
+  # Make Default legend titles
+  if(is.null(band_legend_title)){
+    band_legend_title <- "Band"
+  }
+  if(is.null(position_legend_title)){
+    position_legend_title <- "Positions"
+  }
+  
+  
+  
   # extract the values of the raster into a long dataframe
   extract_df <- .ts_extract_from_frames(r_list_extract = r_list,
                                                 positions = positions,
@@ -136,11 +163,11 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
 
   #For most plots we need the data in long format
   if(TRUE){
-    extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names) 
+    extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names,names_to="band") 
   }
   #Make a df to match colors to band names
   color_matching_table <- cbind(band_names,band_colors)
-  extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("name" = "band_names"),copy=T)
+  extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("band" = "band_names"),copy=T)
   
   ## create value sequence
   if(is.null(val_min)) val_min <- floor_dec(min(sapply(r_list, minValue), na.rm = T),level = 2)
@@ -154,18 +181,23 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     val_seq <- seq(val_min, val_max, by = val_by)
   }
   
-  flow_frames <- plot_function(
-    extract_df = extract_df,
-    position_legend = position_legend,
-    band_legend = band_legend,
-    band_legend_title = band_legend_title,
-    position_legend_title = position_legend_title,
-    legend_position = legend_position,
-    path_size =  path_size,
-    val_seq = val_seq,
-    aes_by_pos = aes_by_pos
-  )
+
   
+  flow_frames <- .lapply(1:max(extract_df$frame), function(i){
+    plot_function(i=i,
+                  edf = extract_df,
+                  bl = band_legend,
+                  pl = position_legend,
+                  lp = legend_position,
+                  blt = band_legend_title,
+                  plt = position_legend_title,
+                  ps = plot_size,
+                  vs = val_seq,
+                  abp = aes_by_pos,
+                  ...)
+  })
+  
+
   
   return(flow_frames)
 }

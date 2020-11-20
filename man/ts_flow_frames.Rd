@@ -13,16 +13,17 @@ ts_flow_frames(
   val_min = NULL,
   val_max = NULL,
   val_by = NULL,
-  path_size = 1,
-  position_legend = T,
+  plot_size = 1,
+  position_legend = NULL,
   legend_position = "right",
-  band_legend = TRUE,
-  band_legend_title = "Bands",
-  position_legend_title = "Positions",
+  band_legend = NULL,
+  band_legend_title = NULL,
+  position_legend_title = NULL,
   pbuffer = NULL,
   plot_function = "line",
   aes_by_pos = TRUE,
-  FUN = mean
+  FUN = mean,
+  ...
 )
 }
 \arguments{
@@ -47,7 +48,7 @@ ts_flow_frames(
 
 \item{val_by}{(Optional) numeric, interval value of the y-axis. Default is \code{0.1}.}
 
-\item{path_size}{(Optional) numeric, size for the ggplot objects. Default is \code{1}.}
+\item{plot_size}{(Optional) numeric, size for the ggplot objects. Default is \code{1}.}
 
 \item{position_legend}{(Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.}
 
