@@ -650,7 +650,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                              extr_df$centr_lat <- 0  #2do: add the centroid coords or sth equivalent
                            }
                            names(extr_df)[1:nlay] <- band_names
-                           extr_df$time <- frametimes[as.integer(x)]
+                           #extr_df$time <- frametimes[as.integer(x)]
+                           extr_df$time <- frametimes[names(r_list_extract)==as.integer(x)]
                            return(extr_df)
                          }))
                            
