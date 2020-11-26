@@ -67,6 +67,8 @@ ts_flow_frames(
 \item{aes_by_pos}{(Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.}
 
 \item{FUN}{(Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.}
+
+\item{...}{(Optional) additional arguments for \code{plot_function}.}
 }
 \value{
 A list of ggplots, one for each element of \code{r_list}.

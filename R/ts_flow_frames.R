@@ -23,13 +23,14 @@
 #' @param aes_by_pos (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #' @param FUN (Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.
 #' @param plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param ... (Optional) additional arguments for \code{plot_function}.
 #' @details Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2]{ggplot}.
 #'  The type of the ggplot is specified by \code{plot_function}. Currently supported are \code{"line"} and \code{"violin"} as well as custom functions which accept similar inputs.
 #'  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values. 
 #' @author Johannes Mast
 #' @import sp ggplot2
 #' @importFrom grDevices hcl.colors
-#' @importFrom dplyr left_join
+#' @importFrom dplyr left_join group_size group_by
 #' @return A list of ggplots, one for each element of \code{r_list}.
 #' @seealso \code{\link{ts_raster}}
 #' @export
