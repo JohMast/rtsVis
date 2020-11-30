@@ -481,13 +481,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   
   frametimes <- .ts_get_frametimes(r_list_extract)
   
-  print("asserting1")
   assert_that(length(r_list_extract)==length(frametimes))
 
   assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
 
   assert_that(!is.null(raster::intersect(r_list_extract[[1]],positions)))
-  print("sf check")
   if(!is.null(pbuffer)){
     if(inherits(positions, "sf")){
       positions <- st_buffer(positions,dist=pbuffer)
@@ -497,7 +495,6 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
       positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
     }
   }
-  print("extracting")
   extr_df <-  
     do.call(rbind,lapply(names(r_list_extract),
                          function(x) {
