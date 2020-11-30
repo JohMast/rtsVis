@@ -328,7 +328,11 @@ ts_get_layer_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
 #' @return a matrix of n_layers*2, one min and one max bound for every layer
 #' @noRd
 ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
-  rs_qs <- t(do.call(cbind, lapply(unstack(x),FUN =  ts_get_layer_quantiles,minq=minq,maxq=maxq,samplesize=samplesize)))
+  if(nlayers(x)<=1){
+    rs_qs <-  ts_get_layer_quantiles(x,minq=minq,maxq=maxq,samplesize=samplesize)
+  }else{
+    rs_qs <- t(do.call(cbind, lapply(unstack(x),FUN =  ts_get_layer_quantiles,minq=minq,maxq=maxq,samplesize=samplesize)))
+  }
   return(rs_qs)
 }
 
@@ -343,8 +347,13 @@ ts_get_stack_quantiles <- function(x,minq=0.02,maxq=0.98,samplesize=100000){
 ts_get_ts_quantiles <- function(ts,minq=0.02,maxq=0.98,samplesize=100000){
   if(minq==0){minq <- 0.000001} #This prevents weird things from occasionally happening with NAs (unknown cause)
   qs <- sapply(ts,ts_get_stack_quantiles,simplify="array",minq=minq,maxq=maxq,samplesize=samplesize)
-  maxqs <- apply(qs[,2,], MARGIN = 1,max)
-  minqs <- apply(qs[,1,], MARGIN = 1,min)
+  if(nlayers(ts[[1]])<=1){ #for discrete and gradient rasters, we get a 2*n_images matrix, for rgb we get a 2*n_images*n_layers array, which needs to be handles a bit differently
+    maxqs <- max(qs[2])
+    minqs <- min(qs[1])
+  }else{
+    maxqs <- apply(qs[,2,], MARGIN = 1,max)
+    minqs <- apply(qs[,1,], MARGIN = 1,min)
+  }
   return(as.data.frame(cbind(minqs,maxqs)))
 }
 
@@ -381,7 +390,8 @@ ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
 #' @return A list of raster(stacks) with values between ymin and ymax
 #' @noRd
 ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize = 10000){
-  ts_quantiles <- ts_get_ts_quantiles(x_list,minq = minq,maxq = maxq,samplesize = samplesize)
+  ts_quantiles <- ts_get_ts_quantiles(ts = x_list,minq = minq,maxq = maxq,samplesize = samplesize)
+
   out <- lapply(x_list,ts_stretch,minqs = ts_quantiles$minqs,maxqs = ts_quantiles$maxqs,ymin = 0,ymax = 1)
   .ts_set_frametimes(out,.ts_get_frametimes(x_list))
 }
