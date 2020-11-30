@@ -391,7 +391,6 @@ ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
 #' @noRd
 ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize = 10000){
   ts_quantiles <- ts_get_ts_quantiles(ts = x_list,minq = minq,maxq = maxq,samplesize = samplesize)
-
   out <- lapply(x_list,ts_stretch,minqs = ts_quantiles$minqs,maxqs = ts_quantiles$maxqs,ymin = 0,ymax = 1)
   .ts_set_frametimes(out,.ts_get_frametimes(x_list))
 }

@@ -62,12 +62,12 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
   #Choose the bands by layer indices
   x_list <- .ts_subset_ts_util(x_list,l_indices)
   
-  #Performing stretch, but dont quantile stretch discrete rtypes
-  if(r_type=="discrete"){
+  #Performing stretch, but only for RGB
+  if(r_type=="RGB"){
    # ts_quantiles <- ts_get_ts_quantiles(x_list,minq = minq,maxq = maxq,samplesize = samplesize)
-    r_list_out_stretched <- ts_stretch_list(x_list = x_list,minq = 0,maxq = 1,samplesize = samplesize)
-  }else{
     r_list_out_stretched <- ts_stretch_list(x_list = x_list,minq = minq,maxq = maxq,samplesize = samplesize)
+  }else{
+    r_list_out_stretched <-  x_list
   }
   
   #Replace NA with 0 if necessary (this can prevent error: "Farbintensität nan nicht in [0, 1]")
