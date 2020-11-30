@@ -41,11 +41,8 @@ options(rtsVis.n_memory_frames = NA)
 r_int <- ts_raster(r_list, r_times, out_times, fade_raster = T)
 ```
 
-## (Planned) functions
+## Demo
 
-* `ts_raster()` -- raster time series assembly/interpolation
-* `ts_ggplot()` -- raster time series assembly/interpolation, returned object is list of `ggplot`s
-* `ts_stars()` -- raster time series assembly/interpolation, returned object is `stars` array
-* ...
+For more elaborate examples, check out the [Demo](https://github.com/JohMast/rtsVis_demo).
 
 In development, not public yet. Last updated: `2020-10-26 13:57:06 CEST`
