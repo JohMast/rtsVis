@@ -504,6 +504,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
       positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
     }
   }
+  
+  #make names if no names
+  if(is.null(names(r_list_extract))){
+    names(r_list_extract) <- as.character(1:length(r_list_extract))
+  }
   extr_df <-  
     do.call(rbind,lapply(names(r_list_extract),
                          function(x) {
@@ -550,14 +555,14 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                # we need make it a list of 1 for consitency
                                # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
                                if(!is.list(extr_df)){
-                                 extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                              #   extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
                                }
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
                                  extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
                                  extr_df[[i]]$position_name <- o_name[[i]]
-                                 extr_df[[i]]$centr_lon <-   st_coordinates(positions)[,1][i] #sf variant of the above
-                                 extr_df[[i]]$centr_lat <-   st_coordinates(positions)[,2][i] #sf variant of the above
+                                 extr_df[[i]]$centr_lon <-   st_coordinates(positions)[,1][i] #sf variant of the below
+                                 extr_df[[i]]$centr_lat <-   st_coordinates(positions)[,2][i] #sf variant of the below
                                }
                                #bind the list elements together
                                extr_df <- do.call("rbind", extr_df)
@@ -776,7 +781,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())+
-    scale_y_continuous(expand = c(0,1000), breaks = vs)+
+    scale_y_continuous(expand = c(0,max(x)/10), breaks = vs)+
     facet_grid(position_name ~ band, scales='free')+
     theme(legend.position = lp)
   
