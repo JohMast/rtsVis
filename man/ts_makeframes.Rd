@@ -11,7 +11,9 @@ ts_makeframes(
   maxq = 0.98,
   samplesize = 1000,
   blacken_NA = FALSE,
-  l_indices = NULL
+  l_indices = NULL,
+  alpha = 1,
+  hillshade = NULL
 )
 }
 \arguments{
@@ -28,6 +30,10 @@ ts_makeframes(
 \item{blacken_NA}{(Optional) logical. If \code{TRUE}: set \code{NA} to \code{0}. Default is \code{FALSE}.}
 
 \item{l_indices}{(Optional) numeric, a vector of layer indices specifying which layers are to be plotted. Should contain 3 values for an RGB image or a single value for a discrete or gradient image. By default, chooses the first three layers if \code{r_type} is \code{"RGB"} and the first layer if \code{r_type} is \code{"discrete"} or \code{"gradient"}.}
+
+\item{alpha}{(Optional) numeric. The opacity of the plot. Default is 1.}
+
+\item{hillshade}{(Optional) A raster layer. If one is provided, it will be used as the base layer and plotted with \link[RStoolbox]{ggR} while the raster layers from x_list will be plotted over it with a default \code{alpha} of 0.5. By default, no hillshade is used.}
 }
 \value{
 A list of ggplots
