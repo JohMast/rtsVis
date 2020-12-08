@@ -493,33 +493,18 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   assert_that(length(r_list_extract)==length(frametimes))
 
   if(!is.null(positions)){
-    assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
-<<<<<<< HEAD
-    assert_that(!is.null(raster::intersect(r_list_extract[[1]],positions)))
-    if(!is.null(pbuffer)){
-      if(inherits(positions, "sf")){
-        positions <- st_buffer(positions,dist=pbuffer)
-      }else if(inherits(positions,c("matrix","array"))){
-        print("Buffering not supported for raw coordinates. Consider converting the coordinates into an sf object.")
-      }else{
-        positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
-      }
-=======
-  }
-
-  assert_that(!is.null(raster::intersect(r_list_extract[[1]],positions)))
-  if(!is.null(pbuffer)){
-    if(inherits(positions, "sf")){
-      positions <- st_buffer(positions,dist=pbuffer)
-    }else if(inherits(positions,c("matrix","array"))){
-      print("Buffering not supported for raw coordinates. Consider converting the coordinates into an sf object.")
-    }else{
-      positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
->>>>>>> 3ea7bbbbca6392bd5f2f78aef23adefcee9156b6
+      assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
+      assert_that(!is.null(raster::intersect(r_list_extract[[1]],positions)))
+      if(!is.null(pbuffer)){
+        if(inherits(positions, "sf")){
+          positions <- st_buffer(positions,dist=pbuffer)
+        }else if(inherits(positions,c("matrix","array"))){
+          print("Buffering not supported for raw coordinates. Consider converting the coordinates into an sf object.")
+        }else{
+          positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
+        }
     }
-    
   }
-
 
 
   #make names if no names
