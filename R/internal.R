@@ -493,7 +493,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 
   if(!is.null(positions)){
       assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
+    if(inherits(positions, "sf")){
+      all(st_contains(st_as_sfc(st_bbox(r_list_extract[[1]])),positions,sparse = F))
+    }else{
       assert_that(!is.null(raster::intersect(r_list_extract[[1]],positions)))
+    }
       if(!is.null(pbuffer)){
         if(inherits(positions, "sf")){
           positions <- st_buffer(positions,dist=pbuffer)
