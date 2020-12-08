@@ -42,12 +42,12 @@ ts_raster <- function(r_list, r_times, out_times = NA, fade_raster = F, ..., ver
   if(!is.logical(fade_raster)) out("Argument 'fade_raster' has to be either TRUE or FALSE.", type = 3)
   if(length(out_times) == 1) out_times <- r_times
 
-  if(identical(r_times, out_times)) return(r_list) else{
-    out <- .rFrames(r_list, r_times, 
+  if(identical(r_times, out_times)) return(.ts_set_frametimes(r_list,out_times)) else{
+    outr <- .rFrames(r_list, r_times, 
              data.frame(frame = 1:length(out_times), time = sort(out_times)),
              gg.ext = NA, fade_raster, crop_raster = F)
   }
   #add the out dates as attribute "time"
-  .ts_set_frametimes(out,out_times)
+  .ts_set_frametimes(outr,out_times)
   
 }

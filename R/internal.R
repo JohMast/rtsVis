@@ -52,7 +52,6 @@ quiet <- function(expr){
 #'
 #' @keywords internal
 #' @noRd
-
 out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = getOption("rtsVis.verbose")){
   if(is.null(ll)) if(isTRUE(verbose)) ll <- 1 else ll <- 2
   if(type == 2 & ll <= 2){warning(paste0(sign,input), call. = FALSE, immediate. = TRUE)}
@@ -558,7 +557,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                  # we need make it a list of 1 for consitency
                                  # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
                                  if(!is.list(extr_df)){
-                                   #   extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                   if(ncol(extr_df)>1)
+                                      extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
                                  }
                                  #add the object name to the respective list element
                                  for(i in 1:length(extr_df)){
@@ -668,7 +668,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                            }
                            names(extr_df)[1:nlay] <- band_names
                            #extr_df$time <- frametimes[as.integer(x)]
-                           extr_df$time <- frametimes[names(r_list_extract)==as.integer(x)]
+                           extr_df$time <- frametimes[names(r_list_extract)==x]
                            return(extr_df)
                          }))
   extr_df$frame <- as.numeric(as.factor(extr_df$time))

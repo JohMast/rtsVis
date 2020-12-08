@@ -46,9 +46,10 @@
 #' @param out_dates A POSIXct vector of timestamps representing the time assoicated with each frame in \code{frames}.
 #' @return A list of frames with timestamps
 #' @noRd
-.ts_set_frametimes <- function(frames,out_dates)
-out <- mapply(x = frames, y = unique(out_dates), function(x, y){
-  attr(x, "time") <- y
-  return(x)
-}, SIMPLIFY = F)
+.ts_set_frametimes <- function(frames,out_dates){
+    out <- mapply(x = frames, y = unique(out_dates), function(x, y){
+    attr(x, "time") <- y
+    return(x)
+  }, SIMPLIFY = F)
 return(out)
+}
