@@ -171,9 +171,9 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("band" = "band_names"),copy=T)
   
   ## create value sequence
-  if(is.null(val_min)) val_min <- floor_dec(min(sapply(r_list, minValue), na.rm = T),level = 2)
-  if(is.null(val_max))val_max <- ceiling_dec(max(sapply(r_list, maxValue), na.rm = T),level = 2)
-
+  if(is.null(val_min)) val_min <- floor_dec(min(sapply(r_list, function(x){min(getValues(x),na.rm = TRUE)})),level = 2)
+  if(is.null(val_max))val_max <- ceiling_dec(max(sapply(r_list, function(x){max(getValues(x),na.rm=TRUE)})),level = 2)
+  
   if(is.null(val_by)){
     #If there are no given vals, just make four
     val_seq <- seq(val_min, val_max, length.out = 4)

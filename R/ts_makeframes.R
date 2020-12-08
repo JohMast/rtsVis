@@ -7,7 +7,8 @@
 #' @param samplesize (Optional) numeric, number of samples per layer to determine the quantile from. See \link[raster]{sampleRegular} for details on the sampling. Default is \code{1000}.
 #' @param blacken_NA  (Optional) logical. If \code{TRUE}: set \code{NA} to \code{0}. Default is \code{FALSE}. 
 #' @param l_indices (Optional) numeric, a vector of layer indices specifying which layers are to be plotted. Should contain 3 values for an RGB image or a single value for a discrete or gradient image. By default, chooses the first three layers if \code{r_type} is \code{"RGB"} and the first layer if \code{r_type} is \code{"discrete"} or \code{"gradient"}.
-#'
+#' @param hillshade (Optional) A raster layer. If one is provided, it will be used as the base layer and plotted with \link[RStoolbox]{ggR} while the raster layers from x_list will be plotted over it with a default \code{alpha} of 0.5. By default, no hillshade is used.
+#' @param alpha (Optional) numeric. The opacity of the plot. Default is 1.
 #' @return A list of ggplots
 #' @details A linear percent stretch will be applied to each band to improve contrast.
 #' #\deqn{(X - Low_{in}) * \frac{((High_{out}-Low_{out})}{(High_{in}-Low_{in}))}  + Low_{out}}
@@ -19,7 +20,8 @@
 #' (see \url{http://movevis.org/} ). For example, a northarrow may be added to all frames using \link[moveVis]{add_northarrow}.
 #' @export
 #' @author Johannes Mast
-#' @importFrom raster compareCRS nlayers 
+#' @importFrom raster compareCRS nlayers
+#' @importFrom RStoolbox ggR 
 #' @examples 
 #' \donttest{
 #' #Setup
@@ -43,7 +45,7 @@
 #'r_frames <- ts_makeframes(x_list = r_list_out,
 #'                           l_indices = c(1,4,3))
 #' }
-ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL){
+ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL,alpha=1,hillshade=NULL){
   
   #If r_type not provided, guess from the first raster object in the list
   if(is.null(r_type)){
@@ -75,7 +77,23 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
     r_list_out_stretched <- .blacken_NA_util(r_list_out_stretched)
   }
   
-  #make the plots
-  r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type)
+  if(!is.null(hillshade)){
+    #use a hillshade layer as base
+    hillshade_layer <- RStoolbox::ggR(crop(hillshade,x_list[[1]]),ggLayer = F)
+    #make the plots (semitransparent and as layers instead of ggobjects)
+    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=T,alpha=0.5)
+    #plot the layers over the hillshade
+    r_ggplots <- lapply(r_ggplots,FUN = function(x){
+      hillshade_layer+x
+    })
+  }else{
+    #make the plots
+    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=F,alpha=alpha)
+  }
+  
+
+  
+  
+  
 }
 
