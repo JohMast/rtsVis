@@ -495,8 +495,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
       assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
     if(inherits(positions, "sf")){
       all(st_contains(st_as_sfc(st_bbox(r_list_extract[[1]])),positions,sparse = F))
+    }else if (nrow(positions)==1){  #if there is only one object (point or line) there may be no raster::intersect
+      all(st_contains(st_as_sfc(st_bbox(r_list_extract[[1]])),sf::st_as_sf(positions[1,]),sparse = F)) #use the sf version for just the first feature then
     }else{
       assert_that(!is.null(raster::intersect(r_list_extract[[1]],positions)))
+      
     }
       if(!is.null(pbuffer)){
         if(inherits(positions, "sf")){
@@ -525,13 +528,16 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                  }else{
                                    o_name <-paste("Polygon" ,(1:nrow(positions)))
                                  }
-                                 extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                                 extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
                                  #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                  #if so, things get more complicated
                                  # we need make it a list of 1 for consitency
                                  # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
                                  if(!is.list(extr_df)){
-                                   extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                   if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                   }else{
+                                     extr_df <- as.list(extr_df)
+                                   }
                                  }
                                  #add the object name to the respective list element
                                  for(i in 1:length(extr_df)){
@@ -553,7 +559,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                  
                                  #Extract the Values, !!suppressing warnings which are currently caused by discarded datums due to Proj4->proj6 switch!!
                                  extr_df <-suppressWarnings(
-                                   raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                                   raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
                                  )
                                  
                                  #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
@@ -561,13 +567,16 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                  # we need make it a list of 1 for consitency
                                  # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
                                  if(!is.list(extr_df)){
-                                   if(ncol(extr_df)>1)
-                                      extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
-                                 }
+                                      if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                      }else{
+                                        extr_df <- as.list(extr_df)
+                                      }
+                                      
+                                   }
                                  #add the object name to the respective list element
                                  for(i in 1:length(extr_df)){
                                    extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
-                                   extr_df[[i]]$position_name <- o_name[[i]]
+                                   extr_df[[i]]$position_name <- o_name[i]
                                    extr_df[[i]]$centr_lon <-   st_coordinates(positions)[,1][i] #sf variant of the below
                                    extr_df[[i]]$centr_lat <-   st_coordinates(positions)[,2][i] #sf variant of the below
                                  }
@@ -587,14 +596,18 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }
                                #Extract the Values, !!suppressing warnings which are currently caused by discarded datums due to Proj4->proj6 switch!!
                                extr_df <-suppressWarnings(
-                                 raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                                 raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
                                )
                                #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                #if so, things get more complicated
                                # we need make it a list of 1 for consitency
                                # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
                                if(!is.list(extr_df)){
-                                 extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                 if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                 }else{
+                                   extr_df <- as.list(extr_df)
+                                 }
+                                 
                                }
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
@@ -614,13 +627,17 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }else{
                                  o_name <-paste("Polygon" ,(1:nrow(positions)))
                                }
-                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
                                #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                #if so, things get more complicated
                                # we need make it a list of 1 for consitency
                                # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
                                if(!is.list(extr_df)){
-                                 extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                 if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                 }else{
+                                   extr_df <- as.list(extr_df)
+                                 }
+                                 
                                }
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
@@ -641,13 +658,17 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }else{
                                  o_name <- paste("Point", 1:nrow(positions))
                                }
-                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN)
+                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
                                #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                #if so, things get more complicated
                                # we need make it a list of 1 for consitency
                                # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
                                if(!is.list(extr_df)){
-                                 extr_df <- split(extr_df,1:nrow(extr_df))   #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                 if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
+                                 }else{
+                                   extr_df <- as.list(extr_df)
+                                 }
+                                 
                                }
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){

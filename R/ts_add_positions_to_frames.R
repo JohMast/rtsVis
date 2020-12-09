@@ -292,6 +292,9 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
     }
   }
   
+  outlist <- outlist %>% .ts_set_frametimes(.ts_get_frametimes(r_frame_list))
+  
+  
 return(outlist)
 
 }

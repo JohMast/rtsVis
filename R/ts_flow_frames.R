@@ -97,6 +97,12 @@
 #' 
 ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean,...){
 
+  if(class(r_list)!="list"){
+    stop(
+      "r_list must be a list of raster objects with associated timestamps."
+    )
+  }
+  
   if (is.null(plot_function)) {
     stop(
       "Please provide a plot_function. plot_function must be 'line', 'violin' or an equivalent custom function."
@@ -194,8 +200,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                   plt = position_legend_title,
                   ps = plot_size,
                   vs = val_seq,
-                  abp = aes_by_pos,
-                  ...)
+                  abp = aes_by_pos)
   })
   
 
