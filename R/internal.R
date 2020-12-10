@@ -516,12 +516,18 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
         }
     }
   }
-
-
   #make names if no names
   if(is.null(names(r_list_extract))){
     names(r_list_extract) <- as.character(1:length(r_list_extract))
   }
+  # Check for duplicated Names
+  while(anyDuplicated(names(r_list_extract))){
+    warning("Duplicated Names found in input raster list")
+    print("Creating unique Names")
+    names(r_list_extract)[duplicated(names(r_list_extract))] <- paste0(names(r_list_extract)[duplicated(names(r_list_extract))],"_2")
+  }
+  
+
   extr_df <-  
     do.call(rbind,lapply(names(r_list_extract),
                          function(x) {
@@ -815,7 +821,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
     theme(axis.title.x=element_blank(),
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())+
-    scale_y_continuous(expand = c(0,max(x)/10), breaks = vs)+
+    scale_y_continuous(expand = c(0,max(x$value)/10), breaks = vs)+
     facet_grid(position_name ~ band, scales='free')+
     theme(legend.position = lp)
   
