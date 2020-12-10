@@ -12,7 +12,7 @@ ts_makeframes(
   samplesize = 1000,
   blacken_NA = FALSE,
   l_indices = NULL,
-  alpha = 1,
+  alpha = NULL,
   hillshade = NULL
 )
 }

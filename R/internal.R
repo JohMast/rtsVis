@@ -153,7 +153,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' @importFrom raster ncell
 #' @importFrom ggplot2 ggplot geom_tile geom_raster aes_string scale_fill_identity
 #' @noRd 
-.gg.bmap <- function(r, r_type, gglayer = F, ...){
+.gg.bmap <- function(r, r_type, gglayer = F, hillshade_layer=NULL, ...){
   extras <- list(...)
   if(!is.null(extras$maxpixels)) maxpixels <- extras$maxpixels else maxpixels <- 500000
   if(!is.null(extras$alpha)) alpha <- extras$alpha else alpha <- 1
@@ -197,7 +197,12 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
     gg <- geom_raster(aes_string(x = "x", y = "y", fill = "fill"), data = df, alpha = alpha)
   }
   
-  if(isFALSE(gglayer)){
+
+  
+  if(!is.null(hillshade_layer)){ #if a hillshade layer was provided
+    gg <- ggplot()+gg+hillshade_layer+gg  #plot as normal, then the hillshade over it, then plot again (this ensures that we dont take the hillshades layout)
+    if(r_type == "RGB") gg <- gg + scale_fill_identity() 
+  }else if(isFALSE(gglayer)){
     gg <- ggplot() + gg
     if(r_type == "RGB") gg <- gg + scale_fill_identity() 
   }
@@ -399,8 +404,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param r_type one of "discrete","gradient", "RGB"
 #' @return a list of ggplots, carrying over the "time" attribute of x_list set
 #' @noRd
-.ts_makeframes <- function(x_list,r_type="RGB",gglayer=F,alpha=1){
-  out <- lapply(x_list, .gg.bmap,r_type=r_type,gglayer=gglayer,alpha=alpha)
+.ts_makeframes <- function(x_list,r_type="RGB",gglayer=F,alpha=1,hillshade_layer=NULL){
+  out <- lapply(x_list, .gg.bmap,r_type=r_type,gglayer=gglayer,alpha=alpha,hillshade_layer=hillshade_layer)
   .ts_set_frametimes(out,.ts_get_frametimes(x_list))
 }
 

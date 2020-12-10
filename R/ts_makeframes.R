@@ -20,7 +20,7 @@
 #' (see \url{http://movevis.org/} ). For example, a northarrow may be added to all frames using \link[moveVis]{add_northarrow}.
 #' @export
 #' @author Johannes Mast
-#' @importFrom raster compareCRS nlayers
+#' @importFrom raster compareCRS nlayers projectRaster
 #' @importFrom RStoolbox ggR 
 #' @examples 
 #' \donttest{
@@ -45,7 +45,7 @@
 #'r_frames <- ts_makeframes(x_list = r_list_out,
 #'                           l_indices = c(1,4,3))
 #' }
-ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL,alpha=1,hillshade=NULL){
+ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL,alpha=NULL,hillshade=NULL){
   
   #If r_type not provided, guess from the first raster object in the list
   if(is.null(r_type)){
@@ -78,15 +78,21 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
   }
   
   if(!is.null(hillshade)){
-    #use a hillshade layer as base
-    hillshade_layer <- RStoolbox::ggR(crop(hillshade,x_list[[1]]),ggLayer = F)
-    #make the plots (semitransparent and as layers instead of ggobjects)
-    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=T,alpha=0.5)
+    if(is.null(alpha)){
+      alpha=0.5
+    }
+    # make a hillshade annotation layer
+    hillshade_layer <- RStoolbox::ggR(projectRaster(hillshade,x_list[[1]]),ggLayer = T)
+    # pass it to ggbmap
+    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=T,alpha=0.5,hillshade_layer=hillshade_layer)
     #plot the layers over the hillshade
-    r_ggplots <- lapply(r_ggplots,FUN = function(x){
-      hillshade_layer+x
-    })
+    #r_ggplots <- lapply(r_ggplots,FUN = function(x){
+    #  hillshade_layer+x
+    #})
   }else{
+    if(is.null(alpha)){
+      alpha=0.5
+    }
     #make the plots
     r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=F,alpha=alpha)
   }
