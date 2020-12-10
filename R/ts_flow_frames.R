@@ -19,10 +19,11 @@
 #' @param band_legend_title (Optional) character, title of the band legend. Default is \code{"Bands"}.
 #' @param position_legend_title (Optional) character, title of the band legend. Default is \code{"Positions"}.
 #' @param pbuffer  (Optional) numeric. The radius of a buffer around each object which will be applied before extraction. By default, no buffer is used.
-#' @param plot_function (Optional) character or function, type of the plots to produce. Currently supported are \code{"line"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}. 
+#' @param plot_function (Optional) character or function, type of the plots to produce. Currently supported are \code{"line"}, \code{"line_flp"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}. 
 #' @param aes_by_pos (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #' @param FUN (Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.
 #' @param plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param return_df (Optional) logical. Return a dataframe with the extracted values instead of a plot? This can be useful for experimenting with plot creation. Default is \code{FALSE}.
 #' @param ... (Optional) additional arguments for \code{plot_function}.
 #' @details Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2]{ggplot}.
 #'  The type of the ggplot is specified by \code{plot_function}. Currently supported are \code{"line"} and \code{"violin"} as well as custom functions which accept similar inputs.
@@ -95,7 +96,7 @@
 #' 
 #' }
 #' 
-ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean,...){
+ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean,return_df=FALSE,...){
 
   if(class(r_list)!="list"){
     stop(
@@ -112,7 +113,9 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
       if (plot_function == "line") {
         print(paste0("Creating: ", length(r_list), " frames of line plots"))
         plot_function <- .ts_gg_line
-      } else if (plot_function == "violin") {
+      } else if(plot_function == "line_flp"){
+        plot_function <- .ts_gg_line_flp
+        }else if (plot_function == "violin") {
         print(paste0("Creating: ", length(r_list), " frames of violin plots"))
         plot_function <- .ts_gg_vio
         FUN = NULL   #No aggregation for violin plots please
@@ -188,7 +191,9 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     val_seq <- seq(val_min, val_max, by = val_by)
   }
   
-
+  if(return_df){
+    return(extract_df)
+  }
   
   flow_frames <- .lapply(1:max(extract_df$frame), function(i){
     plot_function(i=i,
@@ -200,7 +205,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
                   plt = position_legend_title,
                   ps = plot_size,
                   vs = val_seq,
-                  abp = aes_by_pos)
+                  abp = aes_by_pos,...)
   })
   
 

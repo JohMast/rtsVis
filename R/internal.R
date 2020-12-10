@@ -830,6 +830,67 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 }
 
 
+#' line stats plot function
+#' Version of the ts_gg_line where mappings for colors and positions are reverse
+#' @param i the index of the current frame
+#' @param edf a dataframe of all extracted values across all frames
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param position_colors (Optional) character. Colors for the positions. By default, uses rainbow colors.
+#' @param vs val_seq Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @noRd
+.ts_gg_line_flp <- function(i, edf , pl,lp, bl, blt,plt, ps, vs,abp,position_colors=NULL){
+
+  #The data up to the current frame (this will be plotted)
+  x = edf[edf$frame <= i,]
+  #All data (this sets the frame)
+  y=edf
+  
+  if(is.null(position_colors)){position_colors <- rainbow(length(unique(edf$position_name)))}
+  
+  ## generate base plot, either with position mapped to linetype or without
+  if(!isTRUE(abp)){
+    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=position_name))
+  }else{
+    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=band,colour=position_name))+
+      scale_linetype_discrete(name=blt)
+    
+  }
+  ## style it
+  p <- p +
+    geom_path( size = ps, show.legend = T)+  
+    coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+    theme_bw() + 
+    theme(aspect.ratio = 1) +
+    scale_y_continuous(expand = c(0,0), breaks = vs)+
+    theme(legend.position = lp)
+  
+  #add the colors
+  p <- p +
+    scale_colour_manual(values = position_colors,
+                        #breaks = unique(position_name),
+                        name=plt)
+
+
+  ## add legend
+  if(!isTRUE(bl)){
+    p <- p + guides(linetype = FALSE)
+  }
+  if(!isTRUE(pl)){
+    p <- p + guides(colour = FALSE)
+  }
+  return(p)
+}
+
+
+
+
+
 
 
 

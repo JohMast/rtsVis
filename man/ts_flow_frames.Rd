@@ -23,6 +23,7 @@ ts_flow_frames(
   plot_function = "line",
   aes_by_pos = TRUE,
   FUN = mean,
+  return_df = FALSE,
   ...
 )
 }
@@ -62,11 +63,13 @@ ts_flow_frames(
 
 \item{pbuffer}{(Optional) numeric. The radius of a buffer around each object which will be applied before extraction. By default, no buffer is used.}
 
-\item{plot_function}{(Optional) character or function, type of the plots to produce. Currently supported are \code{"line"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}.}
+\item{plot_function}{(Optional) character or function, type of the plots to produce. Currently supported are \code{"line"}, \code{"line_flp"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}.}
 
 \item{aes_by_pos}{(Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.}
 
 \item{FUN}{(Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.}
+
+\item{return_df}{(Optional) logical. Return a dataframe with the extracted values instead of a plot? This can be useful for experimenting with plot creation. Default is \code{FALSE}.}
 
 \item{...}{(Optional) additional arguments for \code{plot_function}.}
 }
