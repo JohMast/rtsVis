@@ -91,7 +91,7 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
     #})
   }else{
     if(is.null(alpha)){
-      alpha=0.5
+      alpha=1
     }
     #make the plots
     r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=F,alpha=alpha)
