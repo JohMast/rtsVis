@@ -466,11 +466,12 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @return a list of raster objects, each subset by l_indices
 #' @noRd
 .ts_subset_ts_util <- function(x_list,l_indices=1){
-  x_list <- lapply(x_list, function(x){
+  x_list_out <- lapply(x_list, function(x){
     x[[l_indices]]
   }
   )
-  return(x_list)
+  x_list_out <- .ts_set_frametimes(x_list_out,.ts_get_frametimes(x_list)) #reapply the dates
+  return(x_list_out)
 }
 
 
