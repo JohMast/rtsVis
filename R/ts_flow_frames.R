@@ -11,8 +11,8 @@
 #' @param val_min (Optional) numeric, minimum value of the y-axis. By default chooses a rounded minimum value of the rasters contained within \code{r_list}.
 #' @param val_max (Optional) numeric, maximum value of the y-axis. By default chooses a rounded maximum value of the rasters contained within \code{r_list}.
 #' @param val_by (Optional) numeric, interval value of the y-axis. Default is \code{0.1}.
-#' @param band_names (Optional) character, names of the positions to be added in legend, if \code{band_legend}. By default, will create placeholder names by band index (Example: "Band 3").
-#' @param band_colors (Optional) character, colors which represent the positions in the plot. Must be in matching order to \code{band_names}. By default will use ggplot colors.
+#' @param band_names (Optional) character, names of the bands to be added in legend, if \code{band_legend}. By default, will create placeholder names by band index (Example: "Band 3").
+#' @param band_colors (Optional) character, colors which represent the bands in the plot. Must be in matching order to \code{band_names}. If \code{r_list} is discrete, the colors will be mapped to the different levels.  By default will use ggplot colors.
 #' @param position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
 #' @param legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
 #' @param band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
