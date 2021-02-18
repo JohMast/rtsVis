@@ -484,7 +484,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @return A dataframe. Columns for the summarized values per layer, position centroid lat & lon, position names, and timestamp and frame indices (integer). Number of rows equals the number of positions in positions multiplied by the number of rasters in r__list_extract
 #' @importFrom tidyr pivot_longer
 #' @importFrom raster extract 
-#' @importFrom sf st_centroid st_coordinates st_geometry st_geometry_type st_buffer st_crs
+#' @importFrom sf st_centroid st_coordinates st_geometry st_geometry_type st_buffer st_crs st_contains st_as_sfc st_bbox
 #' @importFrom raster buffer intersect
 #' @importFrom assertthat assert_that
 #' @import sp
@@ -843,7 +843,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 
 
 #' line stats plot function
-#' Version of the ts_gg_line where mappings for colors and positions are reverse
+#' Version of the ts_gg_line where mappings for colors and positions are reversed
 #' @param i the index of the current frame
 #' @param edf a dataframe of all extracted values across all frames
 #' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
@@ -856,6 +856,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 #' @param vs val_seq Value Sequence for the y axis.
 #' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #' @noRd
+#' @importFrom grDevices rainbow
 .ts_gg_line_flp <- function(i, edf , pl,lp, bl, blt,plt, ps, vs,abp,position_colors=NULL){
 
   #The data up to the current frame (this will be plotted)

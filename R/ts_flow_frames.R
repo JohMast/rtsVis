@@ -30,6 +30,7 @@
 #'  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values. 
 #' @author Johannes Mast
 #' @import sp ggplot2
+#' @importFrom raster getValues
 #' @importFrom grDevices hcl.colors
 #' @importFrom dplyr left_join group_size group_by
 #' @return A list of ggplots, one for each element of \code{r_list}.
@@ -181,7 +182,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   
   ## create value sequence
   if(is.null(val_min)) val_min <- floor_dec(min(sapply(r_list, function(x){min(getValues(x),na.rm = TRUE)})),level = 2)
-  if(is.null(val_max))val_max <- ceiling_dec(max(sapply(r_list, function(x){max(getValues(x),na.rm=TRUE)})),level = 2)
+  if(is.null(val_max)) val_max <- ceiling_dec(max(sapply(r_list, function(x){max(getValues(x),na.rm=TRUE)})),level = 2)
   
   if(is.null(val_by)){
     #If there are no given vals, just make four

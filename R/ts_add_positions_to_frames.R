@@ -64,7 +64,7 @@ crs <-  NULL
 #'                           l_indices = c(1,4,3))
 #' 
 #' #optional: Use moveVis functions to add additional elements to our frames
-#' #library(magrittr)
+#'#library(magrittr)
 #'# r_frames <- r_frames %>%
 #'#   moveVis::add_labels(x = "Longitude", y = "Latitude")%>% 
 #'#   moveVis::add_northarrow(colour = "white", position = "bottomright") %>% 
@@ -292,7 +292,7 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
     }
   }
   
-  outlist <- outlist %>% .ts_set_frametimes(.ts_get_frametimes(r_frame_list))
+  outlist <- .ts_set_frametimes(outlist,.ts_get_frametimes(r_frame_list))
   
   
 return(outlist)
