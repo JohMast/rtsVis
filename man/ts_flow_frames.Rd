@@ -39,9 +39,9 @@ ts_flow_frames(
 
 \item{position_names}{(Optional) character, names of the positions to be added in legend or text. By default, will create placeholder names by combining the object type and Id (Example: "Polygon 3")}
 
-\item{band_names}{(Optional) character, names of the positions to be added in legend, if \code{band_legend}. By default, will create placeholder names by band index (Example: "Band 3").}
+\item{band_names}{(Optional) character, names of the bands to be added in legend, if \code{band_legend}. By default, will create placeholder names by band index (Example: "Band 3").}
 
-\item{band_colors}{(Optional) character, colors which represent the positions in the plot. Must be in matching order to \code{band_names}. By default will use ggplot colors.}
+\item{band_colors}{(Optional) character, colors which represent the bands in the plot. Must be in matching order to \code{band_names}. If \code{r_list} is discrete, the colors will be mapped to the different levels.  By default will use ggplot colors.}
 
 \item{val_min}{(Optional) numeric, minimum value of the y-axis. By default chooses a rounded minimum value of the rasters contained within \code{r_list}.}
 
