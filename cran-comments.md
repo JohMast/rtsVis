@@ -5,6 +5,7 @@ This is a resubmission. In this version I have made the following changes:
 * Updated DESCRIPTION: Fixed outdated link to the github issues page
 * r/ts_makeframes.R: Fixed a typo resulting in incorrect alpha value.
 
+
 ## Test environments
 * local windows 10, R 4.0.3
 * local windows 10, R under development (unstable) (2021-02-17 r80023)
