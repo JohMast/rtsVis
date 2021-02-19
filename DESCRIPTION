@@ -22,7 +22,7 @@ Imports:
   sf,
   tidyr,
   assertthat
-BugReports:  https://github.com/16eagle/rtsVis/issues
+BugReports:  https://github.com/JohMast/rtsVis/issues
 RoxygenNote: 7.1.1
 Suggests: 
     spelling
