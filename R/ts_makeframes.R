@@ -84,7 +84,7 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
     # make a hillshade annotation layer
     hillshade_layer <- RStoolbox::ggR(projectRaster(hillshade,x_list[[1]]),ggLayer = T)
     # pass it to ggbmap
-    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=T,alpha=0.5,hillshade_layer=hillshade_layer)
+    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=T,alpha=alpha,hillshade_layer=hillshade_layer)
     #plot the layers over the hillshade
     #r_ggplots <- lapply(r_ggplots,FUN = function(x){
     #  hillshade_layer+x
