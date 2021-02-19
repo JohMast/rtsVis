@@ -45,4 +45,4 @@ r_int <- ts_raster(r_list, r_times, out_times, fade_raster = T)
 
 For more elaborate examples, check out the [Demo](https://github.com/JohMast/rtsVis_demo).
 
-In development, not public yet. Last updated: `2020-10-26 13:57:06 CEST`
+In development, not public yet. Last updated: `2021-02-18 17:30:00 CEST`
