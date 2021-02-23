@@ -43,8 +43,8 @@ crs <-  NULL
 #'  library(rtsVis)
 #'  library(ggplot2)
 #'  # Load example dataset at a greatly increased interval
-#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),20)]
-#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),20)]
+#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),30)]
+#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),30)]
 #' 
 #' #Fill NAs
 #' x_list_filled <- ts_fill_na(x_list)
@@ -60,7 +60,7 @@ crs <-  NULL
 #'                         fade_raster = TRUE)
 #' #Create the frames 
 #' # as from the desired layers
-#' r_frames <- ts_makeframes(x_list = r_list_out,
+#' r_frames <- ts_makeframes(x_list = r_list_out,samplesize = 10,
 #'                           l_indices = c(1,4,3))
 #' 
 #' #optional: Use moveVis functions to add additional elements to our frames
@@ -108,27 +108,27 @@ crs <-  NULL
 #'                                                            t_hjust = -3000,
 #'                                                            t_vjust = 1000)
 #' #Look at one of the new frames
-#' r_frames_style_point[5]
+#' # r_frames_style_point[5]
 #' 
 #' 
 #' #Alternatively add points
-#' points_mat <- SI_positions$points_matrix #Points in Slovenia
-#' r_frames_style_point_mat <- ts_add_positions_to_frames(r_frame_list = r_frames,
-#'                                                        positions = points_mat,
-#'                                                        psize = 4,
-#'                                                        pcol = "orange",
-#'                                                        position_names = c("A",
-#'                                                                           "B" ),
-#'                                                        position_legend_title = "Point",
-#'                                                        legend_position = "right",
-#'                                                        aes_by_pos = TRUE,
-#'                                                        add_text = TRUE,
-#'                                                        ttype = "label",
-#'                                                        tsize = 3,
-#'                                                        t_hjust = -3000,
-#'                                                        t_vjust = 1000)
+#' # points_mat <- SI_positions$points_matrix #Points in Slovenia
+#' # r_frames_style_point_mat <- ts_add_positions_to_frames(r_frame_list = r_frames,
+#' #                                                       positions = points_mat,
+#' #                                                       psize = 4,
+#' #                                                       pcol = "orange",
+#' #                                                       position_names = c("A",
+#' #                                                                          "B" ),
+#' #                                                      position_legend_title = "Point",
+#' #                                                       legend_position = "right",
+#' #                                                       aes_by_pos = TRUE,
+#' #                                                       add_text = TRUE,
+#' #                                                       ttype = "label",
+#' #                                                       tsize = 3,
+#' #                                                       t_hjust = -3000,
+#' #                                                       t_vjust = 1000)
 #' #Look at one of the new frames
-#' r_frames_style_point_mat[5]
+#' # r_frames_style_point_mat[5]
 ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL,pcol="red",tcol="red",psize=2,tsize=7,ttype="text",t_hjust=0,t_vjust=0,position_legend_title = "Position",legend_position="right",aes_by_pos=FALSE,add_text=FALSE){
   
   if(inherits(positions,"sf")){

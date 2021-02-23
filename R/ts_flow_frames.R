@@ -40,8 +40,8 @@
 #' #' #Setup
 #' library(rtsVis)
 #' # Load example dataset at a greatly increased interval
-#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),25)]
-#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),25)]
+#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),30)]
+#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),30)]
 #' 
 #' #Fill NAs
 #' x_list_filled <- ts_fill_na(x_list)
@@ -57,7 +57,7 @@
 #'                         fade_raster = TRUE)
 #' #Create the frames 
 #' # as from the desired layers
-#' r_frames <- ts_makeframes(x_list = r_list_out,
+#' r_frames <- ts_makeframes(x_list = r_list_out,samplesize = 10,
 #'                           l_indices = c(1,4,3))
 #' 
 #' # Create a line plot from the data extracted over points
@@ -78,21 +78,21 @@
 #' 
 #' 
 #' # Create a violin plot from the data extracted over polygons
-#' polygons <- SI_positions$polygons
-#' flow_frames_poly_vio <-
-#'  rtsVis::ts_flow_frames(r_list = r_list_out,
-#'            position_names = c("Radece","Ljubljana","Kocevje"),
-#'            band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
-#'            positions = polygons,
-#'            band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
-#'            band_legend_title = "Wavelength [nm]",
-#'            position_legend_title = "Občina",
-#'            position_legend = FALSE,
-#'            legend_position = "left",
-#'            band_legend=TRUE,aes_by_pos = FALSE,
-#'            plot_function = "violin")
+#' # polygons <- SI_positions$polygons
+#' #flow_frames_poly_vio <-
+#' #rtsVis::ts_flow_frames(r_list = r_list_out,
+#' #           position_names = c("Radece","Ljubljana","Kocevje"),
+#' #           band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
+#' #           positions = polygons,
+#' #           band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
+#' #           band_legend_title = "Wavelength [nm]",
+#' #           position_legend_title = "Občina",
+#' #           position_legend = FALSE,
+#' #          legend_position = "left",
+#' #           band_legend=TRUE,aes_by_pos = FALSE,
+#' #          plot_function = "violin")
 #' #Check one of the frames
-#' flow_frames_poly_vio[[5]]
+#' # flow_frames_poly_vio[[5]]
 #' 
 ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean,return_df=FALSE,...){
 
