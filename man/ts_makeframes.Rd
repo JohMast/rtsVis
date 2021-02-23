@@ -52,10 +52,10 @@ A linear percent stretch will be applied to each band to improve contrast.
 (see \url{http://movevis.org/} ). For example, a northarrow may be added to all frames using \link[moveVis]{add_northarrow}.
 }
 \examples{
-\donttest{
 #Setup
-x_list <- MODIS_SI_ds
-x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+# Load example dataset at a greatly increased interval
+x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),20)]
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),20)]
 
 #Fill NAs
 x_list_filled <- ts_fill_na(x_list)
@@ -73,7 +73,6 @@ r_list_out <- ts_raster(r_list = x_list_filled,
 # as from the desired layers
 r_frames <- ts_makeframes(x_list = r_list_out,
                           l_indices = c(1,4,3))
-}
 }
 \author{
 Johannes Mast

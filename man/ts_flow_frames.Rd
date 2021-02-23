@@ -85,12 +85,11 @@ Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2
  The function may fail for large polygons and long time series. Be aware that if \code{\link{ts_raster}} is used with \code{fade}, interpolation may be used to generate raster values.
 }
 \examples{
-\donttest{
 #' #Setup
 library(rtsVis)
-
-x_list <- MODIS_SI_ds
-x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+# Load example dataset at a greatly increased interval
+x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),25)]
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),25)]
 
 #Fill NAs
 x_list_filled <- ts_fill_na(x_list)
@@ -112,18 +111,18 @@ r_frames <- ts_makeframes(x_list = r_list_out,
 # Create a line plot from the data extracted over points
 points <- SI_positions$points #Polygons of Slovenian municipalities covered by the raster
 flow_frames_point_line <- rtsVis::ts_flow_frames(r_list = r_list_out,
- position_names = c("Ljubljana","Ivančna Gorica","Dolenjske Toplice","Loški Potok"),
+ position_names = c("Ljubljana","IvanÄna Gorica","Dolenjske Toplice","LoÅ¡ki Potok"),
  band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
  positions = points,
  band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
            band_legend_title = "Wavelength [nm]",
-           position_legend_title = "Občina",
+           position_legend_title = "ObÄina",
            legend_position = "bottom",
            position_legend = FALSE,
            band_legend=TRUE,aes_by_pos = TRUE)
 
 #Check one of the frames
-flow_frames_point_line[[50]]
+flow_frames_point_line[[5]]
 
 
 # Create a violin plot from the data extracted over polygons
@@ -135,15 +134,13 @@ flow_frames_poly_vio <-
            positions = polygons,
            band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
            band_legend_title = "Wavelength [nm]",
-           position_legend_title = "Občina",
+           position_legend_title = "ObÄina",
            position_legend = FALSE,
            legend_position = "left",
            band_legend=TRUE,aes_by_pos = FALSE,
            plot_function = "violin")
 #Check one of the frames
-flow_frames_poly_vio[[50]]
-
-}
+flow_frames_poly_vio[[5]]
 
 }
 \seealso{

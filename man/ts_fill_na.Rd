@@ -4,7 +4,7 @@
 \alias{ts_fill_na}
 \title{Fill NA values in a raster time series}
 \usage{
-ts_fill_na(x_list_fill, verbose = F, ...)
+ts_fill_na(x_list_fill, verbose = FALSE, ...)
 }
 \arguments{
 \item{x_list_fill}{a list of raster objects.}

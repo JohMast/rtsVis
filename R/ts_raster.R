@@ -14,11 +14,12 @@
 #' 
 #' @export
 #' @examples 
-#' \donttest{
 #' #Setup
+#' 
 #'  library(rtsVis)
-#' x_list <- MODIS_SI_ds
-#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+#'  # Load example dataset at a greatly increased interval
+#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),30)]
+#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),30)]
 #' 
 #' #Fill NAs
 #' x_list_filled <- ts_fill_na(x_list)
@@ -32,8 +33,7 @@
 #'                         r_times = x_dates,
 #'                         out_times = out_dates,
 #'                         fade_raster = TRUE)
-#'} 
-ts_raster <- function(r_list, r_times, out_times = NA, fade_raster = F, ..., verbose = T){
+ts_raster <- function(r_list, r_times, out_times = NA, fade_raster = FALSE, ..., verbose = TRUE){
   #2do: take rtype as user input and automatically assign rtype (give warning if auto)
   #2do: take rgb_layers as user input and if more than 3 layers, automatically choose the first 3 as rgb (give warning if auto)
   if(all(!is.list(r_list), inherits(r_list, "Raster"))) r_list <- list(r_list)
@@ -45,7 +45,7 @@ ts_raster <- function(r_list, r_times, out_times = NA, fade_raster = F, ..., ver
   if(identical(r_times, out_times)) return(.ts_set_frametimes(r_list,out_times)) else{
     outr <- .rFrames(r_list, r_times, 
              data.frame(frame = 1:length(out_times), time = sort(out_times)),
-             gg.ext = NA, fade_raster, crop_raster = F)
+             gg.ext = NA, fade_raster, crop_raster = FALSE)
   }
   #add the out dates as attribute "time"
   .ts_set_frametimes(outr,out_times)

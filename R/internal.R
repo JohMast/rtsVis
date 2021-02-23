@@ -105,9 +105,9 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
   i.frames <- i.frames[i.rasters-1]
   
   # interpolation function
-  v.fun <- function(v.x, v.y, ...) t(mapply(xx = v.x, yy = v.y, FUN = function(xx, yy, ...) .na.approx(c(xx, v.na, yy))[pos.frames], SIMPLIFY = T))
-  #v.fun <- function(v.x, v.y, ...) t(mapply(xx = v.x, yy = v.y, FUN = function(xx, yy, ...) zoo::na.approx(c(xx, v.na, yy), rule = 2)[pos.frames], SIMPLIFY = T))
-  #v.fun <- function(v.x, v.y) mapply(xx = v.x, yy = v.y, FUN = function(xx, yy, xx.pos = x.pos, yy.pos = y.pos, xy.frame = frame) zoo::na.approx(c(xx, rep(NA, (yy.pos-xx.pos)-1), yy))[(xy.frame-xx.pos)+1], SIMPLIFY = T)
+  v.fun <- function(v.x, v.y, ...) t(mapply(xx = v.x, yy = v.y, FUN = function(xx, yy, ...) .na.approx(c(xx, v.na, yy))[pos.frames], SIMPLIFY = TRUE))
+  #v.fun <- function(v.x, v.y, ...) t(mapply(xx = v.x, yy = v.y, FUN = function(xx, yy, ...) zoo::na.approx(c(xx, v.na, yy), rule = 2)[pos.frames], SIMPLIFY = TRUE))
+  #v.fun <- function(v.x, v.y) mapply(xx = v.x, yy = v.y, FUN = function(xx, yy, xx.pos = x.pos, yy.pos = y.pos, xy.frame = frame) zoo::na.approx(c(xx, rep(NA, (yy.pos-xx.pos)-1), yy))[(xy.frame-xx.pos)+1], SIMPLIFY = TRUE)
   #v.fun <- Vectorize(function(x, y, ...) zoo::na.approx(c(x, v.na, y), rule = 2)[pos.frame])
   
   # iterate over shoulder ranges
@@ -153,7 +153,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' @importFrom raster ncell
 #' @importFrom ggplot2 ggplot geom_tile geom_raster aes_string scale_fill_identity
 #' @noRd 
-.gg.bmap <- function(r, r_type, gglayer = F, hillshade_layer=NULL, ...){
+.gg.bmap <- function(r, r_type, gglayer = FALSE, hillshade_layer=NULL, ...){
   extras <- list(...)
   if(!is.null(extras$maxpixels)) maxpixels <- extras$maxpixels else maxpixels <- 500000
   if(!is.null(extras$alpha)) alpha <- extras$alpha else alpha <- 1
@@ -163,7 +163,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
   if(maxpixels < ncell(r)) r <- raster::aggregate(r, fact = ceiling(ncell(r)/maxpixels))
   
   # transform into data.frame
-  df <- data.frame(raster::as.data.frame(r, xy = T))
+  df <- data.frame(raster::as.data.frame(r, xy = TRUE))
   colnames(df) <- c("x", "y", paste0("val", 1:(ncol(df)-2)))
   
   # factor if discrete to show categrocial legend
@@ -172,11 +172,11 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
   
   # transform to RGB colours
   if(r_type == "RGB"){
-    if(is.na(maxColorValue)) maxColorValue <- max(c(df$val1, df$val2, df$val3), na.rm = T)
+    if(is.na(maxColorValue)) maxColorValue <- max(c(df$val1, df$val2, df$val3), na.rm = TRUE)
     
-    if(maxColorValue < max(c(df$val1, df$val2, df$val3), na.rm = T)){
+    if(maxColorValue < max(c(df$val1, df$val2, df$val3), na.rm = TRUE)){
       out("maxColorValue < maximum raster value. maxColorValue is set to maximum raster value.", type = 2)
-      maxColorValue <- max(c(df$val1, df$val2, df$val3), na.rm = T)
+      maxColorValue <- max(c(df$val1, df$val2, df$val3), na.rm = TRUE)
     }
     
     # remove NAs
@@ -214,7 +214,7 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
 #' assign raster to frames
 #' @importFrom raster nlayers crop extent brick writeRaster dataType
 #' @noRd
-.rFrames <- function(r_list, r_times, m.df, gg.ext, fade_raster = T, crop_raster = T, ...){
+.rFrames <- function(r_list, r_times, m.df, gg.ext, fade_raster = TRUE, crop_raster = TRUE, ...){
   
   if(!is.list(r_list)){
     r_list <- list(r_list)
@@ -254,16 +254,16 @@ out <- function(input, type = 1, ll = NULL, msg = FALSE, sign = "", verbose = ge
           c(seq(if(i == 2) 1 else pos.df$frame[i-1], pos.df$frame[i],
                 by = if(is.na(getOption("rtsVis.n_memory_frames"))) length(unique(m.df$frame)) else getOption("rtsVis.n_memory_frames")),
             pos.df$frame[i])
-        }, simplify = F)), max(m.df$frame)))
+        }, simplify = FALSE)), max(m.df$frame)))
         
         # write to drive instead of memory
         files <- unlist(sapply(2:length(badges), function(i){
           frames <- if(i == 2) (badges[i-1]):badges[i] else (badges[i-1]+1):badges[i]
           r <- .int2frames(r_list, pos = pos.df$frame, frames = frames, n.rlay = n.rlay, cl = cl)
           y <- paste0(getOption("rtsVis.dir_frames"), "/rtsVis_frame_", frames, ".tif")
-          catch <- sapply(1:length(r), function(j) writeRaster(r[[j]], filename = y[[j]], datatype = dataType(r_list[[1]]), overwrite = T))
+          catch <- sapply(1:length(r), function(j) writeRaster(r[[j]], filename = y[[j]], datatype = dataType(r_list[[1]]), overwrite = TRUE))
           return(y)
-        }, USE.NAMES = F))
+        }, USE.NAMES = FALSE))
         
         # link to files
         r_list <- lapply(files, brick)
@@ -379,7 +379,7 @@ ts_stretch <- function(x,minqs,maxqs,ymin=0,ymax=0){
                             xmax = maxqs,
                             ymin = ymin,
                             ymax = ymax,
-                            forceMinMax = T),
+                            forceMinMax = TRUE),
     ymin,ymax)
 }
 
@@ -404,7 +404,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 #' @param r_type one of "discrete","gradient", "RGB"
 #' @return a list of ggplots, carrying over the "time" attribute of x_list set
 #' @noRd
-.ts_makeframes <- function(x_list,r_type="RGB",gglayer=F,alpha=1,hillshade_layer=NULL){
+.ts_makeframes <- function(x_list,r_type="RGB",gglayer=FALSE,alpha=1,hillshade_layer=NULL){
   out <- lapply(x_list, .gg.bmap,r_type=r_type,gglayer=gglayer,alpha=alpha,hillshade_layer=hillshade_layer)
   .ts_set_frametimes(out,.ts_get_frametimes(x_list))
 }
@@ -500,9 +500,9 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   if(!is.null(positions)){
       assert_that(st_crs(r_list_extract[[1]])==st_crs(positions))
     if(inherits(positions, "sf")){
-      all(st_contains(st_as_sfc(st_bbox(r_list_extract[[1]])),positions,sparse = F))
+      all(st_contains(st_as_sfc(st_bbox(r_list_extract[[1]])),positions,sparse = FALSE))
     }else if (nrow(positions)==1){  #if there is only one object (point or line) there may be no raster::intersect
-      all(st_contains(st_as_sfc(st_bbox(r_list_extract[[1]])),sf::st_as_sf(positions[1,]),sparse = F)) #use the sf version for just the first feature then
+      all(st_contains(st_as_sfc(st_bbox(r_list_extract[[1]])),sf::st_as_sf(positions[1,]),sparse = FALSE)) #use the sf version for just the first feature then
     }else{
       assert_that(!is.null(raster::intersect(r_list_extract[[1]],positions)))
       
@@ -513,7 +513,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
         }else if(inherits(positions,c("matrix","array"))){
           print("Buffering not supported for raw coordinates. Consider converting the coordinates into an sf object.")
         }else{
-          positions <- raster::buffer(positions,width=pbuffer,dissolve=F)
+          positions <- raster::buffer(positions,width=pbuffer,dissolve=FALSE)
         }
     }
   }
@@ -540,11 +540,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                  }else{
                                    o_name <-paste("Polygon" ,(1:nrow(positions)))
                                  }
-                                 extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
+                                 extr_df <- raster::extract(r_list_extract[[x]], positions, df = FALSE,fun=FUN,na.rm=TRUE)
                                  #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                  #if so, things get more complicated
                                  # we need make it a list of 1 for consitency
-                                 # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                                 # (Alternatively use df=TRUE to get a df with a sequential ID which we could then recode somehow)
                                  if(!is.list(extr_df)){
                                    if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
                                    }else{
@@ -553,7 +553,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                  }
                                  #add the object name to the respective list element
                                  for(i in 1:length(extr_df)){
-                                   extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                                   extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = FALSE))
                                    extr_df[[i]]$position_name <- o_name[[i]]
                                    extr_df[[i]]$centr_lon <-   st_coordinates(st_centroid(st_geometry(positions)))[,1][i] #sf variant of the above
                                    extr_df[[i]]$centr_lat <-   st_coordinates(st_centroid(st_geometry(positions)))[,2][i] #sf variant of the above
@@ -571,13 +571,13 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                  
                                  #Extract the Values, !!suppressing warnings which are currently caused by discarded datums due to Proj4->proj6 switch!!
                                  extr_df <-suppressWarnings(
-                                   raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
+                                   raster::extract(r_list_extract[[x]], positions, df = FALSE,fun=FUN,na.rm=TRUE)
                                  )
                                  
                                  #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                  #if so, things get more complicated
                                  # we need make it a list of 1 for consitency
-                                 # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                                 # (Alternatively use df=TRUE to get a df with a sequential ID which we could then recode somehow)
                                  if(!is.list(extr_df)){
                                       if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
                                       }else{
@@ -587,7 +587,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                    }
                                  #add the object name to the respective list element
                                  for(i in 1:length(extr_df)){
-                                   extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                                   extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = FALSE))
                                    extr_df[[i]]$position_name <- o_name[i]
                                    extr_df[[i]]$centr_lon <-   st_coordinates(positions)[,1][i] #sf variant of the below
                                    extr_df[[i]]$centr_lat <-   st_coordinates(positions)[,2][i] #sf variant of the below
@@ -608,12 +608,12 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }
                                #Extract the Values, !!suppressing warnings which are currently caused by discarded datums due to Proj4->proj6 switch!!
                                extr_df <-suppressWarnings(
-                                 raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
+                                 raster::extract(r_list_extract[[x]], positions, df = FALSE,fun=FUN,na.rm=TRUE)
                                )
                                #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                #if so, things get more complicated
                                # we need make it a list of 1 for consitency
-                               # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                               # (Alternatively use df=TRUE to get a df with a sequential ID which we could then recode somehow)
                                if(!is.list(extr_df)){
                                  if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
                                  }else{
@@ -623,7 +623,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
-                                 extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                                 extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = FALSE))
                                  extr_df[[i]]$position_name <- o_name[[i]]
                                  extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                                  extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
@@ -639,11 +639,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }else{
                                  o_name <-paste("Polygon" ,(1:nrow(positions)))
                                }
-                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
+                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = FALSE,fun=FUN,na.rm=TRUE)
                                #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                #if so, things get more complicated
                                # we need make it a list of 1 for consitency
-                               # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                               # (Alternatively use df=TRUE to get a df with a sequential ID which we could then recode somehow)
                                if(!is.list(extr_df)){
                                  if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
                                  }else{
@@ -653,7 +653,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
-                                 extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                                 extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = FALSE))
                                  extr_df[[i]]$position_name <- o_name[[i]]
                                  extr_df[[i]]$centr_lon <-   coordinates(positions)[,1][i] #sf variant of the above
                                  extr_df[[i]]$centr_lat <-   coordinates(positions)[,2][i] #sf variant of the above
@@ -670,11 +670,11 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }else{
                                  o_name <- paste("Point", 1:nrow(positions))
                                }
-                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = F,fun=FUN,na.rm=T)
+                               extr_df <- raster::extract(r_list_extract[[x]], positions, df = FALSE,fun=FUN,na.rm=TRUE)
                                #if we did use a fun to aggregate, the previous step returned a dataframe instead of a list of dataframes
                                #if so, things get more complicated
                                # we need make it a list of 1 for consitency
-                               # (Alternatively use df=T to get a df with a sequential ID which we could then recode somehow)
+                               # (Alternatively use df=TRUE to get a df with a sequential ID which we could then recode somehow)
                                if(!is.list(extr_df)){
                                  if(nlay>1){extr_df <- split(extr_df,1:nrow(extr_df))  #this now is a list of1 containing a vector, otherwise a list of n_objects containing a matrix
                                  }else{
@@ -684,7 +684,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                }
                                #add the object name to the respective list element
                                for(i in 1:length(extr_df)){
-                                 extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = F))
+                                 extr_df[[i]] <- data.frame(matrix(extr_df[[i]],ncol = nlay,byrow = FALSE))
                                  extr_df[[i]]$position_name <- o_name[[i]]
                                  extr_df[[i]]$centr_lon <- coordinates(positions)[, 1][i]
                                  extr_df[[i]]$centr_lat <- coordinates(positions)[, 2][i]
@@ -696,7 +696,7 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
                                
                              }
                            }else if(is.null(positions)){
-                             extr_df <- as.data.frame(matrix( raster::cellStats(r_list_extract[[x]],FUN),nrow = 1,byrow = T)) #unpiped
+                             extr_df <- as.data.frame(matrix( raster::cellStats(r_list_extract[[x]],FUN),nrow = 1,byrow = TRUE)) #unpiped
                              extr_df$lon <- mean(extent(r_list_extract[[x]])[1:2])
                              extr_df$lat <- mean(extent(r_list_extract[[x]])[3:4])
                              extr_df$position_name <- "AOI"
@@ -747,8 +747,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
   }
   ## style it
   p <- p +
-    geom_path( size = ps, show.legend = T)+  
-    coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+    geom_path( size = ps, show.legend = TRUE)+  
+    coord_cartesian(xlim = c(min(y$time, na.rm = TRUE), max(y$time, na.rm = TRUE)), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
     theme_bw() + 
     theme(aspect.ratio = 1) +
     scale_y_continuous(expand = c(0,0), breaks = vs)+
@@ -815,8 +815,8 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
   
   #Style the plot
   p <-p +
-    geom_violin( size = ps, show.legend = T)+  
-    coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+    geom_violin( size = ps, show.legend = TRUE)+  
+    coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
     theme_bw() + 
     theme(aspect.ratio = 1) +
     theme(axis.title.x=element_blank(),
@@ -876,8 +876,8 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
   }
   ## style it
   p <- p +
-    geom_path( size = ps, show.legend = T)+  
-    coord_cartesian(xlim = c(min(y$time, na.rm = T), max(y$time, na.rm = T)), ylim = c(min(vs, na.rm = T), max(vs, na.rm = T))) +
+    geom_path( size = ps, show.legend = TRUE)+  
+    coord_cartesian(xlim = c(min(y$time, na.rm = TRUE), max(y$time, na.rm = TRUE)), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
     theme_bw() + 
     theme(aspect.ratio = 1) +
     scale_y_continuous(expand = c(0,0), breaks = vs)+
@@ -910,7 +910,7 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 #' Add \code{ggplot2} function to frames
 #' @import ggplot2 
 #' @noRd 
-.ts_add_gg <- function(frames, gg, data = NULL, ..., verbose = T){
+.ts_add_gg <- function(frames, gg, data = NULL, ..., verbose = TRUE){
   
   ## check data and replicate if necessary
   if(inherits(data, "list")){
@@ -930,5 +930,5 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
   mapply(.frame = frames, .gg = gg, data = data, function(.frame, .gg, data, arg = list(...)){
     if(length(arg) > 0) for(i in 1:length(arg)) assign(names(arg)[[i]], arg[[i]])
     return(.frame + eval(.gg)) #parse(text = paste0(y, collapse = " + ")))
-  }, USE.NAMES = F, SIMPLIFY = F)
+  }, USE.NAMES = FALSE, SIMPLIFY = FALSE)
 }

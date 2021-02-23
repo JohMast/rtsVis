@@ -4,7 +4,14 @@
 \alias{ts_raster}
 \title{Assemble/interpolate a raster time series}
 \usage{
-ts_raster(r_list, r_times, out_times = NA, fade_raster = F, ..., verbose = T)
+ts_raster(
+  r_list,
+  r_times,
+  out_times = NA,
+  fade_raster = FALSE,
+  ...,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{r_list}{a list of raster objects.}
@@ -26,11 +33,12 @@ a list of raster objects.
 This function assembles a raster time series by assigning or interpolating input rasters to a target time series.
 }
 \examples{
-\donttest{
 #Setup
+
  library(rtsVis)
-x_list <- MODIS_SI_ds
-x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+ # Load example dataset at a greatly increased interval
+x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),30)]
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),30)]
 
 #Fill NAs
 x_list_filled <- ts_fill_na(x_list)
@@ -44,7 +52,6 @@ r_list_out <- ts_raster(r_list = x_list_filled,
                         r_times = x_dates,
                         out_times = out_dates,
                         fade_raster = TRUE)
-} 
 }
 \author{
 Jakob Schwalb-Willmann, Johannes Mast

@@ -1,10 +1,9 @@
 ## Resubmission
 This is a resubmission. In this version I have made the following changes:
 
-* Updated DESCRIPTION: Date section
-* Updated DESCRIPTION: Fixed outdated link to the github issues page
-* r/ts_makeframes.R: Fixed a typo resulting in incorrect alpha value.
-
+* Updated DESCRIPTION: Used only undirected quotation marks in the description text. e.g. `R` --> 'R'
+* Replaced any occurrences of T with TRUE and F with FALSE
+* Unwrapped examples of \donttest{}. Reduced examples to ensure that they are executed quickly.
 
 ## Test environments
 * local windows 10, R 4.0.3

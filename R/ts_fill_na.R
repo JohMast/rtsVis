@@ -20,7 +20,7 @@
 #' x_list_filled <- ts_fill_na(x_list)
 #' }
 
-ts_fill_na <- function(x_list_fill,verbose=F,...){
+ts_fill_na <- function(x_list_fill,verbose=FALSE,...){
   for(n_l in 1:nlayers(x_list_fill[[1]])){
     if(verbose){
       print(paste0("Filling Layer:",n_l))

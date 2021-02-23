@@ -39,12 +39,12 @@ crs <-  NULL
 #' @return A list of ggplots with added positions.
 #' @export
 #' @examples 
-#' \donttest{
 #' #Setup
 #'  library(rtsVis)
 #'  library(ggplot2)
-#' x_list <- MODIS_SI_ds
-#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+#'  # Load example dataset at a greatly increased interval
+#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),20)]
+#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),20)]
 #' 
 #' #Fill NAs
 #' x_list_filled <- ts_fill_na(x_list)
@@ -87,7 +87,7 @@ crs <-  NULL
 #'     aes_by_pos = FALSE
 #'   )
 #' #Look at one of the new frames
-#' r_frames_style_poly[15]
+#' r_frames_style_poly[5]
 #' 
 #' #Alternatively add points
 #' points <- SI_positions$points #Points in Slovenia
@@ -108,7 +108,7 @@ crs <-  NULL
 #'                                                            t_hjust = -3000,
 #'                                                            t_vjust = 1000)
 #' #Look at one of the new frames
-#' r_frames_style_point[15]
+#' r_frames_style_point[5]
 #' 
 #' 
 #' #Alternatively add points
@@ -128,9 +128,8 @@ crs <-  NULL
 #'                                                        t_hjust = -3000,
 #'                                                        t_vjust = 1000)
 #' #Look at one of the new frames
-#' r_frames_style_point_mat[15]
-#' }
-ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL,pcol="red",tcol="red",psize=2,tsize=7,ttype="text",t_hjust=0,t_vjust=0,position_legend_title = "Position",legend_position="right",aes_by_pos=F,add_text=F){
+#' r_frames_style_point_mat[5]
+ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL,pcol="red",tcol="red",psize=2,tsize=7,ttype="text",t_hjust=0,t_vjust=0,position_legend_title = "Position",legend_position="right",aes_by_pos=FALSE,add_text=FALSE){
   
   if(inherits(positions,"sf")){
     if(all(sf::st_geometry_type(positions)=="POINT")){

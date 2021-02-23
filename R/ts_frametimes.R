@@ -50,6 +50,6 @@
     out <- mapply(x = frames, y = unique(out_dates), function(x, y){
     attr(x, "time") <- y
     return(x)
-  }, SIMPLIFY = F)
+  }, SIMPLIFY = FALSE)
 return(out)
 }

@@ -17,8 +17,8 @@ ts_add_positions_to_frames(
   t_vjust = 0,
   position_legend_title = "Position",
   legend_position = "right",
-  aes_by_pos = F,
-  add_text = F
+  aes_by_pos = FALSE,
+  add_text = FALSE
 )
 }
 \arguments{
@@ -68,12 +68,12 @@ The function takes a \code{positions} object, which can be a spatial object or a
 For adding individual positions or text, potentially at varying positions, it is recommended to all \link[moveVis]{add_gg} and \link[moveVis]{add_text} directly.
 }
 \examples{
-\donttest{
 #Setup
  library(rtsVis)
  library(ggplot2)
-x_list <- MODIS_SI_ds
-x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+ # Load example dataset at a greatly increased interval
+x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),20)]
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),20)]
 
 #Fill NAs
 x_list_filled <- ts_fill_na(x_list)
@@ -110,13 +110,13 @@ r_frames_style_poly <-
     positions = polygons,
     psize = 1,
     pcol = "red",
-    position_names = c("Radeče", "Ljubljana", "Kočevje"),
-    position_legend_title = "Občina",
+    position_names = c("RadeÄe", "Ljubljana", "KoÄevje"),
+    position_legend_title = "ObÄina",
     legend_position = "left",
     aes_by_pos = FALSE
   )
 #Look at one of the new frames
-r_frames_style_poly[15]
+r_frames_style_poly[5]
 
 #Alternatively add points
 points <- SI_positions$points #Points in Slovenia
@@ -125,10 +125,10 @@ r_frames_style_point <- rtsVis::ts_add_positions_to_frames(r_frame_list = r_fram
                                                            psize = 4,
                                                            pcol = "orange",
                                                            position_names = c("Ljubljana",
-                                                                              "Ivančna Gorica",
+                                                                              "IvanÄna Gorica",
                                                                               "Dolenjske Toplice",
-                                                                              "Loški Potok"),
-                                                           position_legend_title = "Občina",
+                                                                              "LoÅ¡ki Potok"),
+                                                           position_legend_title = "ObÄina",
                                                            legend_position = "right",
                                                            aes_by_pos = TRUE,
                                                            add_text = TRUE,
@@ -137,7 +137,7 @@ r_frames_style_point <- rtsVis::ts_add_positions_to_frames(r_frame_list = r_fram
                                                            t_hjust = -3000,
                                                            t_vjust = 1000)
 #Look at one of the new frames
-r_frames_style_point[15]
+r_frames_style_point[5]
 
 
 #Alternatively add points
@@ -157,8 +157,7 @@ r_frames_style_point_mat <- ts_add_positions_to_frames(r_frame_list = r_frames,
                                                        t_hjust = -3000,
                                                        t_vjust = 1000)
 #Look at one of the new frames
-r_frames_style_point_mat[15]
-}
+r_frames_style_point_mat[5]
 }
 \seealso{
 \link[moveVis]{add_text} \link[moveVis]{add_gg}

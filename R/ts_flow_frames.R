@@ -37,12 +37,11 @@
 #' @seealso \code{\link{ts_raster}}
 #' @export
 #' @examples 
-#' \donttest{
 #' #' #Setup
 #' library(rtsVis)
-#' 
-#' x_list <- MODIS_SI_ds
-#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )
+#' # Load example dataset at a greatly increased interval
+#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),25)]
+#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),25)]
 #' 
 #' #Fill NAs
 #' x_list_filled <- ts_fill_na(x_list)
@@ -75,7 +74,7 @@
 #'            band_legend=TRUE,aes_by_pos = TRUE)
 #' 
 #' #Check one of the frames
-#' flow_frames_point_line[[50]]
+#' flow_frames_point_line[[5]]
 #' 
 #' 
 #' # Create a violin plot from the data extracted over polygons
@@ -93,9 +92,7 @@
 #'            band_legend=TRUE,aes_by_pos = FALSE,
 #'            plot_function = "violin")
 #' #Check one of the frames
-#' flow_frames_poly_vio[[50]]
-#' 
-#' }
+#' flow_frames_poly_vio[[5]]
 #' 
 ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean,return_df=FALSE,...){
 
@@ -178,7 +175,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   }
   #Make a df to match colors to band names
   color_matching_table <- cbind(band_names,band_colors)
-  extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("band" = "band_names"),copy=T)
+  extract_df <- dplyr::left_join(extract_df,color_matching_table,by = c("band" = "band_names"),copy=TRUE)
   
   ## create value sequence
   if(is.null(val_min)) val_min <- floor_dec(min(sapply(r_list, function(x){min(getValues(x),na.rm = TRUE)})),level = 2)
