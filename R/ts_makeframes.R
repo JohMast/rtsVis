@@ -25,8 +25,8 @@
 #' @examples 
 #' #Setup
 #' # Load example dataset at a greatly increased interval
-#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),20)]
-#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),20)]
+#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),25)]
+#' x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),25)]
 #' 
 #' #Fill NAs
 #' x_list_filled <- ts_fill_na(x_list)
@@ -42,7 +42,7 @@
 #'                         fade_raster = TRUE)
 #' #Create the frames 
 #' # as from the desired layers
-#'r_frames <- ts_makeframes(x_list = r_list_out,
+#'r_frames <- ts_makeframes(x_list = r_list_out,samplesize = 10,
 #'                           l_indices = c(1,4,3))
 ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL,alpha=NULL,hillshade=NULL){
   

@@ -27,10 +27,10 @@ Loads all layers of a specific bands into a stack and uses \link[raster]{approxN
 
 #Setup
  library(rtsVis)
-x_list <- MODIS_SI_ds   #A list of raster objects
+x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),15)]   #A list of raster objects
 
 #Fill NAs
-x_list_filled <- ts_fill_na(x_list)
+x_list_filled <- ts_fill_na(x_list) 
 }
 }
 \author{
