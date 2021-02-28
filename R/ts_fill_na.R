@@ -32,6 +32,11 @@ ts_fill_na <- function(x_list_fill,verbose=FALSE,...){
     #reassign the filled layers to the list elements
     for(n_r in 1:length(x_list_fill)){
       x_list_fill[[n_r]][[n_l]] <- x_lay_filled[[n_r]]
+      if(n_l>1){
+        x_list_fill[[n_r]][[n_l]] <- x_lay_filled[[n_r]]
+      }else{
+        x_list_fill[[n_r]] <- x_lay_filled[[n_r]]
+      }
     }
   }
   return(x_list_fill)
