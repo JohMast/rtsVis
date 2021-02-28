@@ -14,10 +14,10 @@
 #' 
 #' #Setup
 #'  library(rtsVis)
-#' x_list <- MODIS_SI_ds   #A list of raster objects
+#' x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),15)]   #A list of raster objects
 #' 
 #' #Fill NAs
-#' x_list_filled <- ts_fill_na(x_list)
+#' x_list_filled <- ts_fill_na(x_list) 
 #' }
 
 ts_fill_na <- function(x_list_fill,verbose=FALSE,...){
@@ -26,7 +26,11 @@ ts_fill_na <- function(x_list_fill,verbose=FALSE,...){
       print(paste0("Filling Layer:",n_l))
     }
     #make a brick from all the layers
-    x_lay <- stack( .ts_subset_ts_util(x_list_fill,n_l) )
+    if(n_l>1){
+      x_lay <- stack( .ts_subset_ts_util(x_list_fill,n_l) )
+    }else{
+      x_lay <- stack(x_list_fill)
+    }
     #fill the nas
     x_lay_filled <- raster::approxNA(x_lay,...)
     #reassign the filled layers to the list elements

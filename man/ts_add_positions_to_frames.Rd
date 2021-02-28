@@ -72,8 +72,8 @@ For adding individual positions or text, potentially at varying positions, it is
  library(rtsVis)
  library(ggplot2)
  # Load example dataset at a greatly increased interval
-x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),20)]
-x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),20)]
+x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),30)]
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),30)]
 
 #Fill NAs
 x_list_filled <- ts_fill_na(x_list)
@@ -89,7 +89,7 @@ r_list_out <- ts_raster(r_list = x_list_filled,
                         fade_raster = TRUE)
 #Create the frames 
 # as from the desired layers
-r_frames <- ts_makeframes(x_list = r_list_out,
+r_frames <- ts_makeframes(x_list = r_list_out,samplesize = 10,
                           l_indices = c(1,4,3))
 
 #optional: Use moveVis functions to add additional elements to our frames
@@ -110,8 +110,8 @@ r_frames_style_poly <-
     positions = polygons,
     psize = 1,
     pcol = "red",
-    position_names = c("RadeÄe", "Ljubljana", "KoÄevje"),
-    position_legend_title = "ObÄina",
+    position_names = c("Radeče", "Ljubljana", "Kočevje"),
+    position_legend_title = "Občina",
     legend_position = "left",
     aes_by_pos = FALSE
   )
@@ -125,10 +125,10 @@ r_frames_style_point <- rtsVis::ts_add_positions_to_frames(r_frame_list = r_fram
                                                            psize = 4,
                                                            pcol = "orange",
                                                            position_names = c("Ljubljana",
-                                                                              "IvanÄna Gorica",
+                                                                              "Ivančna Gorica",
                                                                               "Dolenjske Toplice",
-                                                                              "LoÅ¡ki Potok"),
-                                                           position_legend_title = "ObÄina",
+                                                                              "Loški Potok"),
+                                                           position_legend_title = "Občina",
                                                            legend_position = "right",
                                                            aes_by_pos = TRUE,
                                                            add_text = TRUE,
@@ -137,27 +137,27 @@ r_frames_style_point <- rtsVis::ts_add_positions_to_frames(r_frame_list = r_fram
                                                            t_hjust = -3000,
                                                            t_vjust = 1000)
 #Look at one of the new frames
-r_frames_style_point[5]
+# r_frames_style_point[5]
 
 
 #Alternatively add points
-points_mat <- SI_positions$points_matrix #Points in Slovenia
-r_frames_style_point_mat <- ts_add_positions_to_frames(r_frame_list = r_frames,
-                                                       positions = points_mat,
-                                                       psize = 4,
-                                                       pcol = "orange",
-                                                       position_names = c("A",
-                                                                          "B" ),
-                                                       position_legend_title = "Point",
-                                                       legend_position = "right",
-                                                       aes_by_pos = TRUE,
-                                                       add_text = TRUE,
-                                                       ttype = "label",
-                                                       tsize = 3,
-                                                       t_hjust = -3000,
-                                                       t_vjust = 1000)
+# points_mat <- SI_positions$points_matrix #Points in Slovenia
+# r_frames_style_point_mat <- ts_add_positions_to_frames(r_frame_list = r_frames,
+#                                                       positions = points_mat,
+#                                                       psize = 4,
+#                                                       pcol = "orange",
+#                                                       position_names = c("A",
+#                                                                          "B" ),
+#                                                      position_legend_title = "Point",
+#                                                       legend_position = "right",
+#                                                       aes_by_pos = TRUE,
+#                                                       add_text = TRUE,
+#                                                       ttype = "label",
+#                                                       tsize = 3,
+#                                                       t_hjust = -3000,
+#                                                       t_vjust = 1000)
 #Look at one of the new frames
-r_frames_style_point_mat[5]
+# r_frames_style_point_mat[5]
 }
 \seealso{
 \link[moveVis]{add_text} \link[moveVis]{add_gg}

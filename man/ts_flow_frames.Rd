@@ -88,8 +88,8 @@ Values are extracted using \link[raster]{extract} and plotted on a \link[ggplot2
 #' #Setup
 library(rtsVis)
 # Load example dataset at a greatly increased interval
-x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),25)]
-x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),25)]
+x_list <- MODIS_SI_ds[seq(1,length(MODIS_SI_ds),30)]
+x_dates <- do.call(c, lapply(MODIS_SI_ds,attr,"time") )[seq(1,length(MODIS_SI_ds),30)]
 
 #Fill NAs
 x_list_filled <- ts_fill_na(x_list)
@@ -105,18 +105,18 @@ r_list_out <- ts_raster(r_list = x_list_filled,
                         fade_raster = TRUE)
 #Create the frames 
 # as from the desired layers
-r_frames <- ts_makeframes(x_list = r_list_out,
+r_frames <- ts_makeframes(x_list = r_list_out,samplesize = 10,
                           l_indices = c(1,4,3))
 
 # Create a line plot from the data extracted over points
 points <- SI_positions$points #Polygons of Slovenian municipalities covered by the raster
 flow_frames_point_line <- rtsVis::ts_flow_frames(r_list = r_list_out,
- position_names = c("Ljubljana","IvanÄna Gorica","Dolenjske Toplice","LoÅ¡ki Potok"),
+ position_names = c("Ljubljana","Ivančna Gorica","Dolenjske Toplice","Loški Potok"),
  band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
  positions = points,
  band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
            band_legend_title = "Wavelength [nm]",
-           position_legend_title = "ObÄina",
+           position_legend_title = "Občina",
            legend_position = "bottom",
            position_legend = FALSE,
            band_legend=TRUE,aes_by_pos = TRUE)
@@ -126,21 +126,21 @@ flow_frames_point_line[[5]]
 
 
 # Create a violin plot from the data extracted over polygons
-polygons <- SI_positions$polygons
-flow_frames_poly_vio <-
- rtsVis::ts_flow_frames(r_list = r_list_out,
-           position_names = c("Radece","Ljubljana","Kocevje"),
-           band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
-           positions = polygons,
-           band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
-           band_legend_title = "Wavelength [nm]",
-           position_legend_title = "ObÄina",
-           position_legend = FALSE,
-           legend_position = "left",
-           band_legend=TRUE,aes_by_pos = FALSE,
-           plot_function = "violin")
+# polygons <- SI_positions$polygons
+#flow_frames_poly_vio <-
+#rtsVis::ts_flow_frames(r_list = r_list_out,
+#           position_names = c("Radece","Ljubljana","Kocevje"),
+#           band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
+#           positions = polygons,
+#           band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
+#           band_legend_title = "Wavelength [nm]",
+#           position_legend_title = "Občina",
+#           position_legend = FALSE,
+#          legend_position = "left",
+#           band_legend=TRUE,aes_by_pos = FALSE,
+#          plot_function = "violin")
 #Check one of the frames
-flow_frames_poly_vio[[5]]
+# flow_frames_poly_vio[[5]]
 
 }
 \seealso{
