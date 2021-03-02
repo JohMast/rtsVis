@@ -52,7 +52,7 @@ t <- MODIStsp(
   parallel = TRUE
 )
 
-ts <- get(load("Beispieldaten/MODIS/NDVI_tsp/VI_16Days_1Km_v6/Time_Series/RData/Mixed/NDVI/MOD13A2_MYD13A2_NDVI_1_2011_361_2013_RData.RData"))
+ts <- get(load("PathTo/NDVI/MOD13A2_MYD13A2_NDVI_1_2011_361_2013_RData.RData"))
 ```
 
 ### Step 2: Preprocessing the Data
