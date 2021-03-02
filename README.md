@@ -1,18 +1,32 @@
 # `rtsVis`
 
 A lightweight `R` package to visualize large raster time series, building on a fast temporal interpolation core.
+rtsVis is linked to the <a href="https://github.com/16EAGLE/moveVis">`moveVis`</a> package and their joint use is recommended.
+
 <img align="right" src="https://github.com/JohMast/rtsVis_demo/blob/main/Images/rtsVis_Logo.png" width="130" height="150" />
 ## Concepts
 rtsVis operates on lists of objects:
 
-- Lists of raster stacks 
-- Lists of frames (ggplot objects of rasters)
+- Lists of <a href="https://cran.r-project.org/web/packages/raster/index.html">`raster`</a> stacks 
+- Lists of frames (<a href="https://ggplot2.tidyverse.org/">`ggplot`</a> objects of rasters or charts)
+
+To process those lists in a pipeline, we recommend pipes such as provided by <a href="https://magrittr.tidyverse.org/">`magrittr`</a>.
+
+- Positions 
+## Functions
+### Preparing rasters
+* `ts_raster` Assemble/interpolate a raster time series.
+* `ts_fill_na` Fill NA values in a raster time series
+### Creating Frames
+* `ts_flow_frames` 	Create a series of charts of a raster time series.
+* `ts_makeframes` 	Create spatial ggplots of a raster time series.
+* `ts_add_positions_to_frames` Add points, coordinates, or polygons to a list of spatial plots.
 
 
-## Get started
+## Example
+The creation an animation of NDVI changes in Northern Europe serves as an example of a typical and complete pipeline.
 
-To create a time-series of the monthly NDVI changes in Northern Europe.
-
+### Step 1: Acquiring the Data
 ``` r
 library(MODIStsp) 
 library(raster)
@@ -35,7 +49,10 @@ t <- MODIStsp(
 )
 
 ts <- get(load("Beispieldaten/MODIS/NDVI_tsp/VI_16Days_1Km_v6/Time_Series/RData/Mixed/NDVI/MOD13A2_MYD13A2_NDVI_1_2011_361_2013_RData.RData"))
+```
 
+### Step 2: Preprocessing the Data
+``` r
 #### Step 2: Preprocessing the Data ####
 
 month_median <- stackApply(ts, months(getZ(ts)), fun = median)
@@ -53,8 +70,9 @@ month_median_interpolated <-  ts_raster(r_list = as.list(month_median),
                                         out_times = out_dates,
                                         fade_raster = T)
 
-
-
+```
+### Step 3: Creating Basic Frames
+``` r
 #### Step 3: Creating Basic Frames ####
 dem <- raster("Beispieldaten/Ancillary/SR_LR/SR_LR.tif") 
 month_median_interpolated_fr <-  ts_makeframes(x_list = month_median_interpolated,hillshade = dem,r_type = "gradient")
@@ -79,8 +97,9 @@ month_median_interpolated_fr_mod_pos <- ts_add_positions_to_frames(r_frame_list 
                                                                    tsize = 3,psize=3,pcol="blue4",
                                                                    add_text = T)
 moveVis::animate_frames(month_median_interpolated_fr_mod_pos,overwrite = TRUE,out_file = "NDVI_Germany_Interpolated.gif",height=700,width=800,fps = 12)
-
-
+```
+### Step 4: Creating Flow Frames
+``` r
 #### Step 4: Creating Flow Frames ####
 
 month_median_interpolated_lineframes <- ts_flow_frames(r_list = month_median_interpolated,
@@ -101,7 +120,9 @@ month_median_interpolated_lineframes <- ts_flow_frames(r_list = month_median_int
       xlab("Month")+
       scale_x_datetime(labels = months)
   })
-
+```
+### Step 5: Animating the Frames
+``` r
 #### Step 5: Animating the Frames ####
 month_median_joined <- moveVis::join_frames(list(month_median_interpolated_fr_mod_pos,month_median_interpolated_lineframes))
 moveVis::animate_frames(month_median_joined,overwrite = TRUE,out_file = "NDVI_Northern_Europe_joined_pause.gif",height=525,width=1200,fps = 12,end_pause = 0.5,res=75)
@@ -114,3 +135,14 @@ moveVis::animate_frames(month_median_joined,overwrite = TRUE,out_file = "NDVI_No
 For more examples, check out the [Demo](https://github.com/JohMast/rtsVis_demo).
 
 In development, published on CRAN. Last updated: `2021-03-02 17:30:00 CEST`
+
+
+## Links
+
+To learn more about creating **custom plot types**, access the guide and test material at the associated github [repo](https://github.com/JohMast/rtsVis_demo/).
+
+For creating visualization with movement data, visit [moveVis](http://movevis.org/).
+
+For inspiration, visit the [r-graph-gallery](https://www.r-graph-gallery.com/)!
+
+To learn about data visualization see Claus Wilke's excellent [book](https://clauswilke.com/dataviz/).
