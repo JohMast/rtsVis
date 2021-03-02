@@ -108,8 +108,7 @@ moveVis::animate_frames(month_median_joined,overwrite = TRUE,out_file = "NDVI_No
 moveVis::animate_frames(month_median_joined,overwrite = TRUE,out_file = "NDVI_Northern_Europe_joined.gif",height=525,width=1200,fps = 10,res=75)
 
 ```
-<p align="center"><img width="50%" height="50%" src="https://raw.githubusercontent.com/JohMast/rtsVis_demo/main/Images/NDVI_Northern_Europe_joined_pause.gif
-"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/JohMast/rtsVis_demo/main/Images/NDVI_Northern_Europe_joined_pause.gif"></p>
 ## Demo
 
 For more examples, check out the [Demo](https://github.com/JohMast/rtsVis_demo).
