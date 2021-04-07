@@ -20,7 +20,9 @@
 #' x_list_filled <- ts_fill_na(x_list) 
 #' }
 
-ts_fill_na <- function(x_list_fill,verbose=FALSE,...){
+ts_fill_na <- function(x_list_fill,maskvalues=NULL,verbose=FALSE,...){
+  rasternames <- names(x_list_fill)
+  
   for(n_l in 1:nlayers(x_list_fill[[1]])){
     if(verbose){
       print(paste0("Filling Layer:",n_l))
@@ -31,18 +33,27 @@ ts_fill_na <- function(x_list_fill,verbose=FALSE,...){
     }else{
       x_lay <- stack(x_list_fill)
     }
+    if(!is.null(maskvalues)){
+      print(paste0("Filling Mask values: ", c(maskvalues)))
+      x_lay[x_lay %in% maskvalues] <- NA
+    }
+    
     #fill the nas
     x_lay_filled <- raster::approxNA(x_lay,...)
+    
+
+    
     #reassign the filled layers to the list elements
     for(n_r in 1:length(x_list_fill)){
-      x_list_fill[[n_r]][[n_l]] <- x_lay_filled[[n_r]]
       if(n_l>1){
         x_list_fill[[n_r]][[n_l]] <- x_lay_filled[[n_r]]
       }else{
-        x_list_fill[[n_r]] <- x_lay_filled[[n_r]]
+        x_list_fill <- as.list(x_lay_filled)
       }
     }
   }
+  #reassign the original names
+  names(x_list_fill) <- rasternames
   return(x_list_fill)
 }
 
