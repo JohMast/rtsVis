@@ -3,6 +3,7 @@
 #' @param verbose (Optional) logical. If \code{TRUE} outputs progress. Default is \code{FALSE}. 
 #' @param ... additional arguments to be passed on to  \link[raster]{approxNA}. Of particular interest is the \code{rule} argument which defines how first and last cells are dealt with. 
 #' @param x_list_fill a list of raster objects.
+#' @param maskvalues numberi, a vector of values to be set to NA before the masking.
 #'
 #' @return A list of rasters with NAs filled.
 #' @importFrom raster approxNA
@@ -22,13 +23,13 @@
 
 ts_fill_na <- function(x_list_fill,maskvalues=NULL,verbose=FALSE,...){
   rasternames <- names(x_list_fill)
-  
-  for(n_l in 1:nlayers(x_list_fill[[1]])){
+  n_layers <- nlayers(x_list_fill[[1]])
+  for(n_l in 1:n_layers){
     if(verbose){
       print(paste0("Filling Layer:",n_l))
     }
     #make a brick from all the layers
-    if(n_l>1){
+    if(n_layers>1){
       x_lay <- stack( .ts_subset_ts_util(x_list_fill,n_l) )
     }else{
       x_lay <- stack(x_list_fill)
@@ -39,13 +40,13 @@ ts_fill_na <- function(x_list_fill,maskvalues=NULL,verbose=FALSE,...){
     }
     
     #fill the nas
-    x_lay_filled <- raster::approxNA(x_lay,...)
+    x_lay_filled <- raster::approxNA(x_lay)#,...)
     
 
     
     #reassign the filled layers to the list elements
     for(n_r in 1:length(x_list_fill)){
-      if(n_l>1){
+      if(n_layers>1){
         x_list_fill[[n_r]][[n_l]] <- x_lay_filled[[n_r]]
       }else{
         x_list_fill <- as.list(x_lay_filled)

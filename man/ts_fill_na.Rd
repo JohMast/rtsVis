@@ -4,10 +4,12 @@
 \alias{ts_fill_na}
 \title{Fill NA values in a raster time series}
 \usage{
-ts_fill_na(x_list_fill, verbose = FALSE, ...)
+ts_fill_na(x_list_fill, maskvalues = NULL, verbose = FALSE, ...)
 }
 \arguments{
 \item{x_list_fill}{a list of raster objects.}
+
+\item{maskvalues}{numberi, a vector of values to be set to NA before the masking.}
 
 \item{verbose}{(Optional) logical. If \code{TRUE} outputs progress. Default is \code{FALSE}.}
 

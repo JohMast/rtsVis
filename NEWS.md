@@ -1,7 +1,7 @@
 ***
 
-## rtsVis 0.0.1
-First release of the development version.
+## rtsVis 0.0.2
+Various Bug fixes.
 
 
 

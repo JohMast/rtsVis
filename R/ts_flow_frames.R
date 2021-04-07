@@ -63,12 +63,12 @@
 #' # Create a line plot from the data extracted over points
 #' points <- SI_positions$points #Polygons of Slovenian municipalities covered by the raster
 #' flow_frames_point_line <- rtsVis::ts_flow_frames(r_list = r_list_out,
-#'  position_names = c("Ljubljana","Ivančna Gorica","Dolenjske Toplice","Loški Potok"),
+#'  position_names = c("Ljubljana","Ivancna Gorica","Dolenjske Toplice","Loski Potok"),
 #'  band_names = c("620 - 670","841 - 876","459 - 479","545 - 565"),
 #'  positions = points,
 #'  band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
 #'            band_legend_title = "Wavelength [nm]",
-#'            position_legend_title = "Občina",
+#'            position_legend_title = "Obcina",
 #'            legend_position = "bottom",
 #'            position_legend = FALSE,
 #'            band_legend=TRUE,aes_by_pos = TRUE)
@@ -86,7 +86,7 @@
 #' #           positions = polygons,
 #' #           band_colors = c("firebrick3","darkorchid3","dodgerblue3","olivedrab3"),
 #' #           band_legend_title = "Wavelength [nm]",
-#' #           position_legend_title = "Občina",
+#' #           position_legend_title = "Obcina",
 #' #           position_legend = FALSE,
 #' #          legend_position = "left",
 #' #           band_legend=TRUE,aes_by_pos = FALSE,

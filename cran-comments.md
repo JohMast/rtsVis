@@ -1,16 +1,14 @@
-## Resubmission
-This is a resubmission. In this version I have made the following changes:
+## Submission of new version
+This is a submission of the version 0.0.2 of rtsVis. Compared to the previous version 0.0.1, and in response to the comment of Kurt Hornik, in this version I have made the following changes:
 
-* Updated DESCRIPTION: Used only undirected quotation marks in the description text. e.g. `R` --> 'R'
-* Replaced any occurrences of T with TRUE and F with FALSE
-* Unwrapped examples of \donttest{}. Reduced examples to ensure that they are executed quickly.
+* ts_flow_frames: Replaced non-standard unicode characters in examples.
+* ts_add_positions_to_frames: Replaced non-standard unicode characters in examples.
+* ts_fill_na: Fixed bug resulting in incorrect masking.
 
 ## Test environments
-* local windows 10, R 4.0.3
-* local windows 10, R under development (unstable) (2021-02-17 r80023)
 * local ubuntu 20.04, R 4.0.2
-* win-builder  R version 4.0.4
-* win-builder R Under development (unstable) (2021-02-20 r80030)
+* win-builder R version 4.0.5
+* win-builder R Under development (unstable) (2021-04-05 r80144)
 
 ## R CMD check results
 
