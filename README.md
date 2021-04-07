@@ -8,7 +8,7 @@ rtsVis is linked to the <a href="https://github.com/16EAGLE/moveVis">`moveVis`</
 
 rtsVis operates on lists of objects:
 
-- Lists of <a href="https://cran.r-project.org/web/packages/raster/index.html">`raster`</a> stacks 
+- Lists of <a href="https://CRAN.R-project.org/package=raster">`raster`</a> stacks 
 - Lists of frames (<a href="https://ggplot2.tidyverse.org/">`ggplot`</a> objects of rasters or charts)
 
 To process those lists in a pipeline, we recommend pipes such as provided by <a href="https://magrittr.tidyverse.org/">`magrittr`</a>.

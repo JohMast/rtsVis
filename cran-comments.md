@@ -4,6 +4,7 @@ This is a submission of the version 0.0.2 of rtsVis. Compared to the previous ve
 * ts_flow_frames: Replaced non-standard unicode characters in examples.
 * ts_add_positions_to_frames: Replaced non-standard unicode characters in examples.
 * ts_fill_na: Fixed bug resulting in incorrect masking.
+* README.md: Corrected link to cran raster webpage.
 
 ## Test environments
 * local ubuntu 20.04, R 4.0.2
