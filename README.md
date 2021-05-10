@@ -1,4 +1,9 @@
 # `rtsVis`
+[![CRAN version](https://www.r-pkg.org/badges/version/rtsVis)](https://CRAN.R-project.org/package=rtsVis)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/last-month/rtsVis?color=brightgreen)](https://CRAN.R-project.org/package=rtsVis)
+[![CRAN checks](https://cranchecks.info/badges/summary/rtsVis)](https://cran.r-project.org/web/checks/check_results_rtsVis.html)
+[![Package dependencies](https://tinyverse.netlify.com/badge/rtsVis)](https://CRAN.R-project.org/package=rtsVis)
+![Test](https://github.com/JohMast/rtsVis/actions/workflows/main.yml/badge.svg)
 
 A lightweight `R` package to visualize large raster time series, building on a fast temporal interpolation core.
 rtsVis is linked to the <a href="https://github.com/16EAGLE/moveVis">`moveVis`</a> package and their joint use is recommended.
