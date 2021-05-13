@@ -19,9 +19,18 @@
 #' @param band_legend_title (Optional) character, title of the band legend. Default is \code{"Bands"}.
 #' @param position_legend_title (Optional) character, title of the band legend. Default is \code{"Positions"}.
 #' @param pbuffer  (Optional) numeric. The radius of a buffer around each object which will be applied before extraction. By default, no buffer is used.
-#' @param plot_function (Optional) character or function, type of the plots to produce. Currently supported are \code{"line"}, \code{"line_flp"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}. 
-#' @param aes_by_pos (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
-#' @param FUN (Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.
+#' @param plot_function (Optional) character or function, type of the plots to produce. Currently supported are \code{'line'}, \code{'line2'}, \code{'vio'}, \code{'dens'}, \code{'dens2'}, \code{'bar_stack'}, \code{'bar_fill'}, \code{'pie'}.One of \itemize{
+##'  \item{\code{'line'} A line chart, suited for comparing trends between bands}
+##'  \item{\code{'line2'} A line chart, suited for comparing trends between positions}
+##'  \item{\code{'vio'} A density chart, suited for comparing of distributions across bands and positions}
+##'  \item{\code{'dens'}  A density chart, suited for comparing of distributions across positions}
+##'  \item{\code{'dens2'}  A density chart, suited for comparing of distributions across bands}
+##'  \item{\code{'bar_stack'} A horizontal bar chart, suited for visualizing counts and proportions among discrete data.}
+##'  \item{\code{'bar_fill'} A horizontal bar chart, suited for visualizing proportions among discrete data.}
+##'  \item{\code{'pie'} A pie chart, suited for visualizing rough proportions among discrete data with few categories.}
+##' } Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}. 
+#' @param aes_by_pos (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Ignored by some plot types which inherently map position to facets. Default is \code{TRUE}.
+#' @param FUN (Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"NULL"}. Summarizing in this way is not sensible for many plot types which visualize distribution or count. Note that usually, summarize statistics will be calculated in an appropriate way by the \code{plot_function} rather than during the extraction.
 #' @param plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
 #' @param return_df (Optional) logical. Return a dataframe with the extracted values instead of a plot? This can be useful for experimenting with plot creation. Default is \code{FALSE}.
 #' @param ... (Optional) additional arguments for \code{plot_function}.
@@ -32,7 +41,11 @@
 #' @import sp ggplot2
 #' @importFrom raster getValues
 #' @importFrom grDevices hcl.colors
+#' @importFrom graphics frame
 #' @importFrom dplyr left_join group_size group_by
+#' @importFrom stats density filter
+#' @importFrom magrittr %>%
+#' @importFrom tidyr drop_na
 #' @return A list of ggplots, one for each element of \code{r_list}.
 #' @seealso \code{\link{ts_raster}}
 #' @export
@@ -90,12 +103,12 @@
 #' #           position_legend = FALSE,
 #' #          legend_position = "left",
 #' #           band_legend=TRUE,aes_by_pos = FALSE,
-#' #          plot_function = "violin")
+#' #          plot_function = "vio")
 #' #Check one of the frames
 #' # flow_frames_poly_vio[[5]]
 #' 
-ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=mean,return_df=FALSE,...){
-
+ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=NULL,band_colors=NULL,val_min=NULL,val_max=NULL,val_by=NULL,plot_size=1,position_legend=NULL,legend_position="right",band_legend=NULL,band_legend_title=NULL,position_legend_title=NULL,pbuffer=NULL,plot_function="line",aes_by_pos=TRUE,FUN=NULL,return_df=FALSE,...){
+  
   if(class(r_list)!="list"){
     stop(
       "r_list must be a list of raster objects with associated timestamps."
@@ -108,18 +121,36 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     )
   } else{
     if (class(plot_function) == "character") {
-      if (plot_function == "line") {
-        print(paste0("Creating: ", length(r_list), " frames of line plots"))
+      if(plot_function == "line") {
+        print(paste0("Creating: ", length(r_list), " frames of line plots, colored by bands"))
         plot_function <- .ts_gg_line
-      } else if(plot_function == "line_flp"){
-        plot_function <- .ts_gg_line_flp
-        }else if (plot_function == "violin") {
+      } else if(plot_function == "line2") {
+        print(paste0("Creating: ", length(r_list), " frames of line plots, colored by position"))
+        plot_function <- .ts_gg_line2
+      } else if(plot_function == "vio") {
         print(paste0("Creating: ", length(r_list), " frames of violin plots"))
         plot_function <- .ts_gg_vio
-        FUN = NULL   #No aggregation for violin plots please
+      } else if(plot_function == "violin") {
+        print(paste0("Creating: ", length(r_list), " frames of violin plots"))
+        plot_function <- .ts_gg_vio
+      } else if(plot_function == "dens") {
+        print(paste0("Creating: ", length(r_list), " frames of density plots, colored by position"))
+        plot_function <- .ts_gg_dens
+      } else if(plot_function == "dens2"){
+        print(paste0("Creating: ", length(r_list), " frames of density plots, colored by band"))
+        plot_function <- .ts_gg_dens2
+      }else if(plot_function == "bar_stack"){
+        print(paste0("Creating: ", length(r_list), " frames of stacked bar plots"))
+        plot_function <- .ts_gg_bar_stack
+      }else if(plot_function == "bar_fill"){
+        print(paste0("Creating: ", length(r_list), " frames of filled bar plots"))
+        plot_function <- .ts_gg_bar_fill
+      }else if (plot_function == "pie") {
+        print(paste0("Creating: ", length(r_list), " frames of pie plots"))
+        plot_function <- .ts_gg_pie
       }
     } else if (!class(plot_function) == "function") {
-      stop("plot_function must be 'line', 'violin' or an equivalent custom function.")
+      stop("plot_function must be on of 'line', 'line2', 'vio', 'dens', 'dens2', 'bar_stack', 'bar_fill', 'pie', or an equivalent custom function.")
     }
   }
   
@@ -132,7 +163,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   if(is.null(band_names)){
     band_names <- paste0("Band",1:(nlayers(r_list[[1]])))  #make artificial bandnames if necessary
   }
-
+  
   
   #Should legends be plotted? By Default no.
   if(is.null(band_legend)){
@@ -163,12 +194,12 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   
   # extract the values of the raster into a long dataframe
   extract_df <- .ts_extract_from_frames(r_list_extract = r_list,
-                                                positions = positions,
-                                                position_names = position_names,
-                                                band_names = band_names,
-                                                pbuffer= pbuffer,
-                                                FUN = FUN)
-
+                                        positions = positions,
+                                        position_names = position_names,
+                                        band_names = band_names,
+                                        pbuffer= pbuffer,
+                                        FUN = FUN)
+  
   #For most plots we need the data in long format
   if(TRUE){
     extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names,names_to="band") 
@@ -193,20 +224,32 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     return(extract_df)
   }
   
-  flow_frames <- .lapply(1:max(extract_df$frame), function(i){
-    plot_function(i=i,
-                  edf = extract_df,
-                  bl = band_legend,
-                  pl = position_legend,
-                  lp = legend_position,
-                  blt = band_legend_title,
-                  plt = position_legend_title,
-                  ps = plot_size,
-                  vs = val_seq,
-                  abp = aes_by_pos,...)
-  })
+  # flow_frames <- .lapply(1:max(extract_df$frame), function(i){
+  #   plot_function(i=i,
+  #                 edf = extract_df,
+  #                 bl = band_legend,
+  #                 pl = position_legend,
+  #                 lp = legend_position,
+  #                 blt = band_legend_title,
+  #                 plt = position_legend_title,
+  #                 ps = plot_size,
+  #                 vs = val_seq,
+  #                 abp = aes_by_pos,...)
+  # })
   
-
+  flow_frames <-  plot_function(
+    edf = extract_df,
+    bl = band_legend,
+    pl = position_legend,
+    lp = legend_position,
+    blt = band_legend_title,
+    plt = position_legend_title,
+    ps = plot_size,
+    vs = val_seq,
+    abp = aes_by_pos,
+    ...)
+  
+  
   
   return(flow_frames)
 }

@@ -1,7 +1,7 @@
 #' NULL declaration to suppres R CMD CHECK warning related to tidyverse syntax
 #' @keywords internal
 #' @noRd
-aggregate <- time <- name <- band <- value <- long  <-  lat <-   group <-  hcl.colors <- r_list_extract <-  x <-  minValue <-  maxValue <- quantile <-position_name  <- id <-  NULL
+aggregate <- time <- name <- band <- dens <- value <- long  <-  lat <-   group <-  hcl.colors <- r_list_extract <-label <- pos <- midpointpos <- midpoint <- cumulative <- n <- frame <-   x <-  minValue <-  maxValue <- quantile <-position_name  <- id <-  n_distinct <- drop_na <- filter <- ungroup <- ..density.. <- first <- n_distinct <- band_colors <- frame <- pull <- mutate <- density <- summarise <- NULL
 
 
 ##From moveVis
@@ -25,7 +25,6 @@ aggregate <- time <- name <- band <- value <- long  <-  lat <-   group <-  hcl.c
   }else if(isTRUE(rtsVis.verbose)) pblapply(X, FUN, ...) else lapply(X, FUN, ...)
 }
 
-##From raster
 .haveMinMax <- function(x) {
   if (inherits(x, "RasterLayer") || inherits(x, "RasterBrick")) {
     return(x@data@haveminmax)
@@ -717,72 +716,208 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
 
 
 
-#' line stats plot function
-#' Adapted from moveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe
-#' @param i the index of the current frame
-#' @param edf a dataframe of all extracted values across all frames
-#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
-#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
-#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
-#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
-#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
-#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
-#' @param vs val_seq Value Sequence for the y axis.
-#' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
-#' @noRd
-.ts_gg_line <- function(i, edf , pl,lp, bl, blt,plt, ps, vs,abp){
-  
-  #The data up to the current frame (this will be plotted)
-  x = edf[edf$frame <= i,]
-  #All data (this sets the frame)
-  y=edf
-  
-  ## generate base plot, either with position mapped to linetype or without
-  if(!isTRUE(abp)){
-    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),colour=band))
-  }else{
-    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=position_name,colour=band))+
-      scale_linetype_discrete(name=plt)
-    
-  }
-  ## style it
-  p <- p +
-    geom_path( size = ps, show.legend = TRUE)+  
-    coord_cartesian(xlim = c(min(y$time, na.rm = TRUE), max(y$time, na.rm = TRUE)), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
-    theme_bw() + 
-    theme(aspect.ratio = 1) +
-    scale_y_continuous(expand = c(0,0), breaks = vs)+
-    theme(legend.position = lp)
-  
-  #add the colors
-  p <- p +
-    scale_colour_manual(values = x$band_colors,breaks = x$band, name=blt)
-  
-  
-  ## add legend
-  if(!isTRUE(pl)){
-    p <- p + guides(linetype = FALSE)
-  }  
-  if(!isTRUE(bl)){
-    p <- p + guides(colour = FALSE)
-  }  
-  return(p)
-}
-
-
-
 #Aux function for rounding significant digits, credit to 
 #https://stackoverflow.com/a/39611375
 floor_dec <- function(x, level=1) round(x - 5*10^(-level-1), level)
 ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 
 
+#' density chart. The positions are mapped to colors, the bands are mapped to facets
+#' #' facets are bands, color is position
+#' @param edf a dataframe of all extracted values across all frames. Should be continuous, derived from RGB or gradient rasters.
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Ignored) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param position_colors (Optional) character. Colors for the positions. By default, uses rainbow colors.
+#' @param vs val_seq (Ignored) Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Ignored) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @importFrom dplyr ungroup summarise desc
+#' @noRd
+.ts_gg_dens <- function(edf,pl,lp, bl, blt,plt, ps, vs,abp,position_colors=NULL){
+  
+  if(abp){
+    print("Ignoring aes_by_pos argument as grouping is done by position")
+  }
+  
+  if(!((edf %>%  pull(value) %>% class()) %in% c("integer","numeric") )){
+    warning("The value you are attempting to plot is not numeric. Are you sure you want to create a distribution plot? ")
+  } 
+  
+  
+  min(group_size(group_by(edf,position_name,band,frame))) -> n_value_min
+  if(n_value_min<10){
+    warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
+  }
+  
+  
+  #Prior: for all frames
+  x_min <- edf %>% dplyr::select(value) %>% 
+    drop_na() %>% 
+    min()
+  
+  x_max <- edf %>% dplyr::select(value) %>% 
+    drop_na() %>% 
+    max()
+  
+  y_min <- 0
+  
+  y_max <- edf  %>% 
+    drop_na() %>% 
+    group_by(position_name,band,frame) %>% 
+    mutate(dens=max(density((value),na.rm = T,kernel = "gaussian")$y)) %>% 
+    ungroup() %>% 
+    summarise(ymax=max(dens)) %>%
+    pull()
+  
+  if(is.null(position_colors)){position_colors <- rainbow(length(unique(edf$position_name)))}
+  
+  #Per frame
+  out_frames <- .lapply(1:max(edf$frame), function(i){
+    
+    x <- edf[edf$frame == i,]
+    min(group_size(group_by(x,band,position_name))) -> n_value_min
+    
+    if(n_value_min<10){
+      warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
+    }
+    
+    if(abp){
+      p <- x %>% ggplot(aes(value,..density..,fill=position_name))
+    }else{
+      p <- x %>% ggplot(aes(value,..density..,fill=position_name))
+    }
+    
+    
+    p <- p +
+      geom_density(alpha=0.6)+
+      facet_wrap(~band,ncol=1,scales = "fixed")+
+      theme_bw() + 
+      theme(axis.title.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank())+
+      theme(legend.position = lp)+
+      xlim(c(x_min,x_max))+
+      ylim(c(y_min,y_max))
+    
+    #add the colors
+    p <- p +
+      scale_fill_manual(values = position_colors,
+                        #breaks = unique(position_name),
+                        name=plt)
+    
+    ## add legend
+    if(!isTRUE(pl)){
+      p <- p + guides(linetype = FALSE)
+    }  
+    if(!isTRUE(bl)){
+      p <- p + guides(colour = FALSE)
+    }  
+    return(p)
+  }
+  )
+  return(out_frames)
+}
 
-#' .ts_gg_vio
-#'
+#' density chart. The bands are mapped to colors, the positions are mapped to facets
+#' #' color is bands, facets are position
+#' @param edf a dataframe of all extracted values across all frames. Should be continuous, derived from RGB or gradient rasters.
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Ignored) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Ignored) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param position_colors (Optional) character. Colors for the positions. By default, uses rainbow colors.
+#' @param vs val_seq (Ignored) Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Ignored) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @noRd
+.ts_gg_dens2 <- function(edf,pl,lp, bl, blt,plt, ps, vs,abp){
+  if(abp){
+    print("Ignoring aes_by_pos argument as faceting is done by position")
+  }
+  
+  
+  if(!((edf %>%  pull(value) %>% class()) %in% c("integer","numeric") )){
+    warning("The value you are attempting to plot is not numeric. Are you sure you want to plot distribution? ")
+  }
+  
+  
+  #Prior: for all frames
+  x_min <- edf %>% dplyr::select(value) %>% 
+    drop_na() %>% 
+    min()
+  
+  x_max <- edf %>% dplyr::select(value) %>% 
+    drop_na() %>% 
+    max()
+  
+  y_min <- 0
+  
+  y_max <- edf  %>% 
+    drop_na() %>% 
+    group_by(position_name,band,frame) %>% 
+    mutate(dens=max(density((value),na.rm = T,kernel = "gaussian")$y)) %>% 
+    ungroup() %>% 
+    summarise(ymax=max(dens)) %>%
+    pull()
+  
+  min(group_size(group_by(edf,position_name,band,frame))) -> n_value_min
+  if(n_value_min<10){
+    warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
+  }
+  
+  #Per frame
+  out_frames <- .lapply(1:max(edf$frame), function(i){
+    
+    x <- edf[edf$frame == i,]
+    min(group_size(group_by(x,position_name,band))) -> n_value_min
+    
+    if(n_value_min<10){
+      warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
+    }
+    
+    if(abp){
+      p <- x %>% ggplot(aes(value,..density..,fill=band))
+    }else{
+      p <- x %>% ggplot(aes(value,..density..,fill=band))
+    }
+    
+    
+    p <- p +
+      geom_density(alpha=0.6)+
+      facet_wrap(~position_name,ncol=1,scales = "fixed")+
+      theme_bw() + 
+      theme(axis.title.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank())+
+      theme(legend.position = lp)+
+      xlim(c(x_min,x_max))+
+      ylim(c(y_min,y_max))
+    
+    #add the colors
+    p <- p +
+      scale_colour_manual(values = x$band_colors,breaks = x$band, name=blt)
+    
+    ## add legend
+    if(!isTRUE(pl)){
+      p <- p + guides(linetype = FALSE)
+    }  
+    if(!isTRUE(bl)){
+      p <- p + guides(colour = FALSE)
+    }  
+    return(p)
+  }
+  )
+  return(out_frames)
+}
+
+#' violin chart
+#' #' color is bands, facets are bands~position
 #' @description Create a violin plot
-#' @param i the index of the current frame
-#' @param edf a dataframe of all extracted values across all frames
+#' @param edf a dataframe of all extracted values across all frames.  Should be continuous, derived from RGB or gradient rasters.
 #' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
 #' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
 #' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
@@ -794,58 +929,336 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 #' @return
 #' @importFrom dplyr group_size group_by
 #' @noRd
-.ts_gg_vio <- function(i,edf,pl,lp, bl, blt,plt, ps, vs,abp){
+.ts_gg_vio <- function(edf,pl,lp, bl, blt,plt, ps, vs,abp){
   
-  x <- edf[edf$frame == i,]
-  min(group_size(group_by(x,position_name,band))) -> n_value_min
-  
-  #x %>% group_by(position_name,band)%>% group_size() %>% min() -> n_value_min
-  if(n_value_min<10){
-    warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
-  }
-  
-  ## generate base plot, either with position mapped to linetype or without
-  if(!isTRUE(abp)){
-    p <- ggplot(x, aes(x = 1, y = value,group = interaction(position_name,band),colour=band))
-  }else{
-    p <- ggplot(x, aes(x = 1, y = value,group = interaction(position_name,band),linetype=position_name,colour=band))+
-      scale_linetype_discrete(name=plt)
+  #Prior: for all frames
+  out_frames <- .lapply(1:max(edf$frame), function(i){
     
+    x <- edf[edf$frame == i,]
+    
+    if(!((edf %>%  pull(value) %>% class()) %in% c("integer","numeric") )){
+      warning("The value you are attempting to plot is not numeric. Are you sure you want to create a violin plot? ")
+    } 
+    
+    
+    min(group_size(group_by(x,position_name,band))) -> n_value_min
+    if(n_value_min<10){
+      warning("Some frames contain less than 10 values for some positions. Are you sure you want to plot distribution? ")
+    }
+    
+    ## generate base plot, either with position mapped to linetype or without
+    if(!isTRUE(abp)){
+      p <- ggplot(x, aes(x = 1, y = value,group = interaction(position_name,band),colour=band))
+    }else{
+      p <- ggplot(x, aes(x = 1, y = value,group = interaction(position_name,band),linetype=position_name,colour=band))+
+        scale_linetype_discrete(name=plt)
+      
+    }
+    
+    #Style the plot
+    p <-p +
+      geom_violin( size = ps, show.legend = TRUE)+  
+      coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      theme(axis.title.x=element_blank(),
+            axis.text.x=element_blank(),
+            axis.ticks.x=element_blank())+
+      scale_y_continuous(expand = c(0,max(x$value)/10), breaks = vs)+
+      facet_grid(position_name ~ band, scales='free')+
+      theme(legend.position = lp)
+    
+    #add the colors
+    p <- p +
+      scale_colour_manual(values = x$band_colors,breaks = x$band, name=blt)
+    
+    
+    ## add legend
+    if(!isTRUE(pl)){
+      p <- p + guides(linetype = FALSE)
+    }  
+    if(!isTRUE(bl)){
+      p <- p + guides(colour = FALSE)
+    }  
+    
+    return(p)
   }
+  )
   
-  #Style the plot
-  p <-p +
-    geom_violin( size = ps, show.legend = TRUE)+  
-    coord_cartesian(xlim = c(0,2), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
-    theme_bw() + 
-    theme(aspect.ratio = 1) +
-    theme(axis.title.x=element_blank(),
-          axis.text.x=element_blank(),
-          axis.ticks.x=element_blank())+
-    scale_y_continuous(expand = c(0,max(x$value)/10), breaks = vs)+
-    facet_grid(position_name ~ band, scales='free')+
-    theme(legend.position = lp)
-  
-  #add the colors
-  p <- p +
-    scale_colour_manual(values = x$band_colors,breaks = x$band, name=blt)
-  
-  
-  ## add legend
-  if(!isTRUE(pl)){
-    p <- p + guides(linetype = FALSE)
-  }  
-  if(!isTRUE(bl)){
-    p <- p + guides(colour = FALSE)
-  }  
-  return(p)
+  return(out_frames)
 }
 
+#' line stats plot function
+#' Adapted from moveVis and only lightly changed (to not require a move object and instead a rtsVis extracted dataframe
+#' Therefore, maps bands to color and position to linetype
+#' #' Color is bands, linetype is position
+#' @param edf a dataframe of all extracted values across all frames.  Should be continuous, derived from RGB or gradient rasters.
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param vs val_seq Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @noRd
+#' @importFrom dplyr first
+.ts_gg_line <- function(edf , pl,lp, bl, blt,plt, ps, vs,abp){
+  
+  
+  if(!((edf %>%  pull(value) %>% class()) %in% c("integer","numeric") )){
+    warning("The value you are attempting to plot is not numeric. Are you sure you want to create a line plot? ")
+  } 
+  
+  #Prior: for all frames
+  x_min <- min(edf$time,na.rm = T)
+  
+  x_max <- max(edf$time,na.rm = T)
+  
+  if(!is.null(vs)){
+    y_min <- min(vs)
+  }else{
+    min(edf$value,na.rm = T)
+  }
+  
+  if(!is.null(vs)){
+    y_max <- max(vs)
+  }else{
+    max(edf$value,na.rm = T)
+  }
+  
+  
+  y_max <- max(vs)
+  
+  edf <- edf %>% 
+    drop_na() %>% 
+    group_by(position_name,frame,band) %>% 
+    summarise(value=mean(value),
+              time=as.POSIXct(first(time)),
+              band_colors=first(band_colors))
+  
+  #Per frame
+  out_frames <- .lapply(1:max(edf$frame), function(i){
+    
+    #The data up to the current frame (this will be plotted)
+    x = edf[edf$frame <= i,]
+    
+    ## generate base plot, either with position mapped to linetype or without
+    if(!isTRUE(abp)){
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),colour=band))
+    }else{
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=position_name,colour=band))+
+        scale_linetype_discrete(name=plt)
+      
+    }
+    ## style it
+    p <- p +
+      geom_path( size = ps, show.legend = TRUE)+  
+      coord_cartesian(xlim = c(x_min,x_max), ylim = c(y_min,y_max)) +
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      scale_y_continuous(expand = c(0,0), breaks = vs)+
+      theme(legend.position = lp)
+    
+    #add the colors
+    p <- p +
+      scale_colour_manual(values = x$band_colors,breaks = x$band, name=blt)
+    
+    
+    ## add legend
+    if(!isTRUE(pl)){
+      p <- p + guides(linetype = FALSE)
+    }  
+    if(!isTRUE(bl)){
+      p <- p + guides(colour = FALSE)
+    }  
+    return(p)
+  }
+  )
+  return(out_frames)
+}
 
 #' line stats plot function
 #' Version of the ts_gg_line where mappings for colors and positions are reversed
-#' @param i the index of the current frame
+#' Therefore, maps bands to linetype and position to color
+#' #' Linetype is bands, Color is position
 #' @param edf a dataframe of all extracted values across all frames
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param position_colors (Optional) character. Colors for the positions. By default, uses rainbow colors.
+#' @param vs val_seq Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the color aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @noRd
+#' @importFrom grDevices rainbow
+#' @importFrom dplyr select n_distinct
+#' @importFrom tidyr drop_na
+.ts_gg_line2 <- function(edf , pl,lp, bl, blt,plt, ps, vs,abp,position_colors=NULL){
+  
+  if(!((edf %>%  pull(value) %>% class()) %in% c("integer","numeric") )){
+    warning("The value you are attempting to plot is not numeric. Are you sure you want to create a line plot? ")
+  } 
+  
+  
+  
+  #Prior: for all frames
+  x_min <- min(edf$time,na.rm = T)
+  
+  x_max <- max(edf$time,na.rm = T)
+  
+  if(!is.null(vs)){
+    y_min <- min(vs)
+  }else{
+    min(edf$value,na.rm = T)
+  }
+  
+  if(!is.null(vs)){
+    y_max <- max(vs)
+  }else{
+    max(edf$value,na.rm = T)
+  }
+  
+  
+  y_max <- max(vs)
+  
+  edf <- edf %>% 
+    drop_na() %>% 
+    group_by(position_name,frame,band) %>% 
+    summarise(value=mean(value),
+              time=as.POSIXct(first(time)),
+              band_colors=first(band_colors))
+  
+  #Per frame
+  out_frames <- .lapply(1:max(edf$frame), function(i){
+    
+    #The data up to the current frame (this will be plotted)
+    x = edf[edf$frame <= i,]
+    #All data (this sets the frame)
+    y=edf
+    
+    if(is.null(position_colors)){position_colors <- rainbow(length(unique(edf$position_name)))}
+    
+    ## generate base plot, either with position mapped to linetype or without
+    if(!isTRUE(abp)){
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=band))
+    }else{
+      p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=band,colour=position_name))+
+        scale_linetype_discrete(name=blt)
+      
+    }
+    ## style it
+    p <- p +
+      geom_path( size = ps, show.legend = TRUE)+  
+      coord_cartesian(xlim = c(min(y$time, na.rm = TRUE), max(y$time, na.rm = TRUE)), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      scale_y_continuous(expand = c(0,0), breaks = vs)+
+      theme(legend.position = lp)
+    
+    #add the colors
+    p <- p +
+      scale_colour_manual(values = position_colors,
+                          #breaks = unique(position_name),
+                          name=plt)
+    
+    
+    ## add legend
+    if(!isTRUE(bl)){
+      p <- p + guides(linetype = FALSE)
+    }
+    if(!isTRUE(pl)){
+      p <- p + guides(colour = FALSE)
+    }
+    return(p)
+  }
+  )
+  return(out_frames)
+}
+
+#' Horizontal bar charts, where facets are bands, and bars are stacked 
+#' #' facet is bands, y is position, fill is distinct, x is count
+#' @param edf a dataframe of all extracted values across all frames. Should be categorical, derived from discrete rasters.
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param position_colors (Ignored) character. Colors for the positions. By default, uses rainbow colors.
+#' @param vs val_seq Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Ignored) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @noRd
+#' @importFrom dplyr select n_distinct
+.ts_gg_bar_stack <- function(i,edf,pl,lp, bl, blt,plt, ps, vs,abp){
+  
+  if(edf %>% dplyr::select(value) %>% n_distinct() > 10 ){
+    warning("The variable to visualise has more than 10 distinct values. Are you sure you want to plot counts by value?")
+  } 
+  
+  out_frames <- .lapply(1:max(edf$frame), function(i){
+    
+    x <- edf %>% dplyr::filter(frame==i) %>% drop_na()
+    
+    ## generate base plot
+    p <- ggplot(x, aes(x = position_name,fill=value,col=value))+
+      facet_wrap(~band)+
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      theme(legend.position = lp)+
+      coord_flip()
+    p <- p+geom_bar(position="stack",stat="count")
+    return(p)
+  }
+  )
+  return(out_frames)
+}
+
+#' Horizontal bar charts, where facets are bands, and bars are stacked. Fills so that proportions are more easily visible.
+#' #' facet is bands, y is position, fill is distinct, x is proportion
+#' @param edf a dataframe of all extracted values across all frames. Should be categorical, derived from discrete rasters.
+#' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
+#' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
+#' @param blt band_legend_title  (Optional) character, title of the band legend. Default is \code{"Positions"}.
+#' @param plt position_legend_title  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
+#' @param ps plot_size (Optional) numeric, size for the ggplot objects. Default is \code{1}.
+#' @param position_colors (Ignored) character. Colors for the positions. By default, uses rainbow colors.
+#' @param vs val_seq Value Sequence for the y axis.
+#' @param abp aes_by_pos  (Ignored) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
+#' @noRd
+#' @importFrom dplyr select  
+
+.ts_gg_bar_fill <- function(i,edf,pl,lp, bl, blt,plt, ps, vs,abp){
+  
+  if(edf %>% dplyr::select(value) %>% n_distinct() > 10 ){
+    warning("The variable to visualise has more than 10 distinct values. Are you sure you want to plot counts by value?")
+  } 
+  
+  out_frames <- .lapply(1:max(edf$frame), function(i){
+    
+    x <- edf %>% dplyr::filter(frame==i) %>% drop_na()
+    
+    ## generate base plot
+    p <- ggplot(x, aes(x = position_name,fill=value,col=value))+
+      facet_wrap(~band)+
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      theme(legend.position = lp)+
+      coord_flip()+
+      xlab("proportion")
+    p <- p+geom_bar(position="fill",stat="count")
+    return(p)
+  }
+  )
+  return(out_frames)
+}
+
+#' pie chart for plotting proportions among categorical values
+#' facet is bands vs position, angle is proportion
+#' @param edf a dataframe of all extracted values across all frames. Should be categorical, derived from discrete rasters.
 #' @param pl position_legend (Optional) logical. If \code{TRUE}: Add a legend for the positions. Only recommended if \code{aes_by_pos} is also  \code{TRUE}.
 #' @param lp legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable all legends. Default is \code{"right"}.
 #' @param bl band_legend (Optional) logical. If \code{TRUE}: Add a legend for the bands. Default is \code{TRUE}.
@@ -856,53 +1269,52 @@ ceiling_dec <- function(x, level=1) round(x + 5*10^(-level-1), level)
 #' @param vs val_seq Value Sequence for the y axis.
 #' @param abp aes_by_pos  (Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.
 #' @noRd
-#' @importFrom grDevices rainbow
-.ts_gg_line_flp <- function(i, edf , pl,lp, bl, blt,plt, ps, vs,abp,position_colors=NULL){
-
-  #The data up to the current frame (this will be plotted)
-  x = edf[edf$frame <= i,]
-  #All data (this sets the frame)
-  y=edf
+#' @importFrom dplyr select arrange tally pull mutate group_by desc
+.ts_gg_pie <- function(edf,pl,lp, bl, blt,plt, ps, vs,abp){
   
-  if(is.null(position_colors)){position_colors <- rainbow(length(unique(edf$position_name)))}
+  if(edf %>% dplyr::select(value) %>% n_distinct() > 10 ){
+    stop("The variable to visualise has more than 10 distinct values. Are you sure you want to plot proportions by value?")
+  } 
   
-  ## generate base plot, either with position mapped to linetype or without
-  if(!isTRUE(abp)){
-    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=position_name))
-  }else{
-    p <- ggplot(x, aes(x = time, y = value,group = interaction(position_name,band),linetype=band,colour=position_name))+
-      scale_linetype_discrete(name=blt)
+  out_frames <- .lapply(1:max(edf$frame), function(i){
     
+    x <- edf %>% dplyr::filter(frame==i) %>% drop_na()
+    
+    #pie labels
+    labels <- x %>% 
+      group_by(band,position_name,value) %>%
+      tally() %>%
+      dplyr::arrange(desc(value)) %>% 
+      mutate(cumulative=cumsum(n),
+             midpoint=cumulative-n/2,
+             label = paste0(value, " ", round(n / sum(n) * 100, 1), "%"),
+             pos=(n / sum(n)),
+             midpointpos=midpoint/sum(n))
+    labels
+    ## generate base plot
+    
+    p <- ggplot(labels, aes(x = "",fill=factor(value)))+
+      facet_grid(band~position_name)+
+      theme_bw() + 
+      theme(aspect.ratio = 1) +
+      theme(legend.position = lp)+
+      theme(axis.line = element_blank(),
+            axis.text = element_blank(),
+            plot.title = element_text(hjust=0.5)) +
+      coord_polar(theta = "y", start=0) + 
+      labs(fill="", 
+           x=NULL, 
+           y=NULL)+
+      geom_col(aes(y=pos),width=1) 
+    
+    #add labels
+    p <-  p+geom_text(data = labels,mapping = aes(x=1,y=midpointpos,label=label))
+    p
+    return(p)
   }
-  ## style it
-  p <- p +
-    geom_path( size = ps, show.legend = TRUE)+  
-    coord_cartesian(xlim = c(min(y$time, na.rm = TRUE), max(y$time, na.rm = TRUE)), ylim = c(min(vs, na.rm = TRUE), max(vs, na.rm = TRUE))) +
-    theme_bw() + 
-    theme(aspect.ratio = 1) +
-    scale_y_continuous(expand = c(0,0), breaks = vs)+
-    theme(legend.position = lp)
-  
-  #add the colors
-  p <- p +
-    scale_colour_manual(values = position_colors,
-                        #breaks = unique(position_name),
-                        name=plt)
-
-
-  ## add legend
-  if(!isTRUE(bl)){
-    p <- p + guides(linetype = FALSE)
-  }
-  if(!isTRUE(pl)){
-    p <- p + guides(colour = FALSE)
-  }
-  return(p)
+  )
+  return(out_frames)
 }
-
-
-
-
 
 
 

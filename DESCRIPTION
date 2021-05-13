@@ -21,7 +21,8 @@ Imports:
   sp,
   sf,
   tidyr,
-  assertthat
+  assertthat,
+  magrittr
 BugReports:  https://github.com/JohMast/rtsVis/issues
 RoxygenNote: 7.1.1
 Suggests: 

@@ -3,7 +3,7 @@
 #' @param verbose (Optional) logical. If \code{TRUE} outputs progress. Default is \code{FALSE}. 
 #' @param ... additional arguments to be passed on to  \link[raster]{approxNA}. Of particular interest is the \code{rule} argument which defines how first and last cells are dealt with. 
 #' @param x_list_fill a list of raster objects.
-#' @param maskvalues numberi, a vector of values to be set to NA before the masking.
+#' @param maskvalues numeric, a vector of values to be set to NA before the masking.
 #'
 #' @return A list of rasters with NAs filled.
 #' @importFrom raster approxNA

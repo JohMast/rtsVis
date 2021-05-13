@@ -22,7 +22,7 @@ ts_flow_frames(
   pbuffer = NULL,
   plot_function = "line",
   aes_by_pos = TRUE,
-  FUN = mean,
+  FUN = NULL,
   return_df = FALSE,
   ...
 )
@@ -63,11 +63,20 @@ ts_flow_frames(
 
 \item{pbuffer}{(Optional) numeric. The radius of a buffer around each object which will be applied before extraction. By default, no buffer is used.}
 
-\item{plot_function}{(Optional) character or function, type of the plots to produce. Currently supported are \code{"line"}, \code{"line_flp"} and \code{"violin"}. Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}.}
+\item{plot_function}{(Optional) character or function, type of the plots to produce. Currently supported are \code{'line'}, \code{'line2'}, \code{'vio'}, \code{'dens'}, \code{'dens2'}, \code{'bar_stack'}, \code{'bar_fill'}, \code{'pie'}.One of \itemize{
+ \item{\code{'line'} A line chart, suited for comparing trends between bands}
+ \item{\code{'line2'} A line chart, suited for comparing trends between positions}
+ \item{\code{'vio'} A density chart, suited for comparing of distributions across bands and positions}
+ \item{\code{'dens'}  A density chart, suited for comparing of distributions across positions}
+ \item{\code{'dens2'}  A density chart, suited for comparing of distributions across bands}
+ \item{\code{'bar_stack'} A horizontal bar chart, suited for visualizing counts and proportions among discrete data.}
+ \item{\code{'bar_fill'} A horizontal bar chart, suited for visualizing proportions among discrete data.}
+ \item{\code{'pie'} A pie chart, suited for visualizing rough proportions among discrete data with few categories.}
+} Alternatively, a custom function with similar structure and arguments can be passed to create other types of plots. Default is \code{"line"}.}
 
-\item{aes_by_pos}{(Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Default is \code{TRUE}.}
+\item{aes_by_pos}{(Optional) logical. If \code{TRUE}: vary the linetype aesthetic to be different for each position? If  \code{FALSE}, this also disables the \code{position_legend}, as no notable classes will be plotted. Ignored by some plot types which inherently map position to facets. Default is \code{TRUE}.}
 
-\item{FUN}{(Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"mean"}. For some \code{plot_function} which map the full distribution of values the FUN is ignored.}
+\item{FUN}{(Optional) function to summarize the values (e.g. mean) during the extraction. See \link[raster]{extract} for more details. Default is \code{"NULL"}. Summarizing in this way is not sensible for many plot types which visualize distribution or count. Note that usually, summarize statistics will be calculated in an appropriate way by the \code{plot_function} rather than during the extraction.}
 
 \item{return_df}{(Optional) logical. Return a dataframe with the extracted values instead of a plot? This can be useful for experimenting with plot creation. Default is \code{FALSE}.}
 
@@ -138,7 +147,7 @@ flow_frames_point_line[[5]]
 #           position_legend = FALSE,
 #          legend_position = "left",
 #           band_legend=TRUE,aes_by_pos = FALSE,
-#          plot_function = "violin")
+#          plot_function = "vio")
 #Check one of the frames
 # flow_frames_poly_vio[[5]]
 

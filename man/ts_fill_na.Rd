@@ -9,7 +9,7 @@ ts_fill_na(x_list_fill, maskvalues = NULL, verbose = FALSE, ...)
 \arguments{
 \item{x_list_fill}{a list of raster objects.}
 
-\item{maskvalues}{numberi, a vector of values to be set to NA before the masking.}
+\item{maskvalues}{numeric, a vector of values to be set to NA before the masking.}
 
 \item{verbose}{(Optional) logical. If \code{TRUE} outputs progress. Default is \code{FALSE}.}
 
