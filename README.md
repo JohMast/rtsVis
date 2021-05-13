@@ -2,7 +2,6 @@
 [![CRAN version](https://www.r-pkg.org/badges/version/rtsVis)](https://CRAN.R-project.org/package=rtsVis)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/last-month/rtsVis?color=brightgreen)](https://CRAN.R-project.org/package=rtsVis)
 [![CRAN checks](https://cranchecks.info/badges/summary/rtsVis)](https://cran.r-project.org/web/checks/check_results_rtsVis.html)
-[![Package dependencies](https://tinyverse.netlify.com/badge/rtsVis)](https://CRAN.R-project.org/package=rtsVis)
 [![R-CMD-check](https://github.com/16EAGLE/rtsVis/workflows/R-CMD-check/badge.svg)](https://github.com/16EAGLE/rtsVis/actions)
 
 A lightweight `R` package to visualize large raster time series, building on a fast temporal interpolation core.
@@ -88,7 +87,7 @@ month_median_interpolated <-  ts_raster(r_list = as.list(month_median),
 ### Step 3: Creating Basic Frames
 
 In this step, ts_makeframes is used to create a list of frames (ggplot2 objects) from the time series (raster objects).
-Using pipes is not necessary, but improves readibility greatly. Here, we also use moveVis functions to easily add map elements. 
+Using pipes is not necessary, but improves readability greatly. Here, we also use moveVis functions to easily add map elements. 
 Note that ggplot2 functions can be easily applied to the created frames using lapply. 
 
 ``` r
