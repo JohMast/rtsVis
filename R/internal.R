@@ -469,6 +469,8 @@ ts_stretch_list <- function(x_list,minq=0.01,maxq=0.99,ymin=0,ymax=0, samplesize
     x[[l_indices]]
   }
   )
+  
+  
   x_list_out <- .ts_set_frametimes(x_list_out,.ts_get_frametimes(x_list)) #reapply the dates
   return(x_list_out)
 }
