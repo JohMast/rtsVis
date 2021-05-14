@@ -13,7 +13,8 @@ ts_makeframes(
   blacken_NA = FALSE,
   l_indices = NULL,
   alpha = NULL,
-  hillshade = NULL
+  hillshade = NULL,
+  ...
 )
 }
 \arguments{

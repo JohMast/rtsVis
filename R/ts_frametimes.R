@@ -53,3 +53,19 @@
   }, SIMPLIFY = FALSE)
 return(out)
 }
+
+
+#' Sets frametimes for a list of frames
+#'
+#' @param x A list to which timestamps are added.
+#' @param y A list from which the timestamps are derived.
+#' @return A list identical to x with timestamps carried over from y.
+#' @export
+ts_copy_frametimes <- function(x,y){
+  if(length(x)==length(y)){
+    .ts_set_frametimes(x,.ts_get_frametimes(y))
+  }else{
+    stop("Lengths of lists are not identical. Cannot copy timestamps")
+  }
+  
+}

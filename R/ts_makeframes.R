@@ -44,7 +44,7 @@
 #' # as from the desired layers
 #'r_frames <- ts_makeframes(x_list = r_list_out,samplesize = 10,
 #'                           l_indices = c(1,4,3))
-ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL,alpha=NULL,hillshade=NULL){
+ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesize = 1000,blacken_NA=FALSE,l_indices=NULL,alpha=NULL,hillshade=NULL,...){
   
   #If r_type not provided, guess from the first raster object in the list
   if(is.null(r_type)){
@@ -80,10 +80,17 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
     if(is.null(alpha)){
       alpha=0.5
     }
+    
+    #transform if necessary
+    if(!compareCRS(hillshade,x_list[[1]])){
+      hillshade <- projectRaster(hillshade,x_list[[1]])
+    }
+    
+    
     # make a hillshade annotation layer
-    hillshade_layer <- RStoolbox::ggR(projectRaster(hillshade,x_list[[1]]),ggLayer = TRUE)
+    hillshade_layer <- RStoolbox::ggR(hillshade,ggLayer = TRUE)
     # pass it to ggbmap
-    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=TRUE,alpha=alpha,hillshade_layer=hillshade_layer)
+    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=TRUE,alpha=alpha,hillshade_layer=hillshade_layer,...)
     #plot the layers over the hillshade
     #r_ggplots <- lapply(r_ggplots,FUN = function(x){
     #  hillshade_layer+x
@@ -93,7 +100,7 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
       alpha=1
     }
     #make the plots
-    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=FALSE,alpha=alpha)
+    r_ggplots <- .ts_makeframes(x_list = r_list_out_stretched,r_type = r_type,gglayer=FALSE,alpha=alpha,...)
   }
   
   r_ggplots <- .ts_set_frametimes(r_ggplots , .ts_get_frametimes(x_list))

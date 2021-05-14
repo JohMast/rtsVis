@@ -153,7 +153,9 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
       stop("plot_function must be on of 'line', 'line2', 'vio', 'dens', 'dens2', 'bar_stack', 'bar_fill', 'pie', or an equivalent custom function.")
     }
   }
-  
+  if(is.null(plot_function)){
+    stop("No suitable plot function found")
+  }
   
   #Ensure nice colors
   if(is.null(band_colors)){
