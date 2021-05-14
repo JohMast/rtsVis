@@ -36,13 +36,13 @@ In this example, we use a MODIS timeseries to create typical visualisations whic
 
 We read our inputs:
 
-* MODIS files, which contain 4 bands (Red, NIR, Blue, Green). These are monthly composites of the MCD43A4.006 product.
-* points, which can be visualized and for which statistics can be extracted. We 
+* A list of **MODIS raster files** in tif format, which contain 4 bands (Red, NIR, Blue, Green). These are monthly composites of the MCD43A4.006 product.
+* **points** in gpkg format, which can be visualized and for which statistics can be extracted. These correspond to various places in and around Africa.
 
 Optional, but useful to enhance the visualizations:
 
-* outline, an outline of the continent Africa.
-* a hillshade raster which can be applied to the spatial plots.
+* an **outline** of the continent Africa.
+* a global **hillshade** raster which can be applied to the spatial plots.
 
 Some functions in `rtsVis` require that timestamps for the rasters are set. Often, these come with the metadata or can be derived from the filename. They can also be manually set. In this example, we have monthly medians, and no true acquisition time. Therefore, we manually create a series of dates.
 In addition to the input times, we also set output times - for these, output dates will be created. We simply create a second, denser series of dates. Having a denser series will smooth the animation.
@@ -56,14 +56,18 @@ library(RStoolbox)
 library(tidyverse)
 
 # Load the inputs
+
 modis_tifs <- list.files("Beispieldaten/MODIS/Africa_MODIS_2017-2020/",full.names = T,pattern=".tif$")
 points <- st_read("Beispieldaten/Ancillary/Africa/Africa_places.gpkg")
 outline <- st_read("Beispieldaten/Ancillary/Outline_continents_africa.gpkg") 
-dem <- raster("Beispieldaten/Ancillary/SR_LR/SR_LR.tif") %>% readAll()
+hillshade <- raster("Beispieldaten/Ancillary/SR_LR/SR_LR.tif") %>% readAll()
 
 
 #Create in-times and out-times
-in_dates <- as.POSIXct(seq.Date(as.Date("2017-01-15"),as.Date("2020-12-15"),length.out = length(modis_tifs)))
+in_dates <- as.POSIXct(seq.Date(as.Date("2017-01-15"),
+                                as.Date("2020-12-15"),
+                                length.out = length(modis_filled)))
+                                
 out_dates <-seq.POSIXt(from = in_dates[1],
                        to = in_dates[length(in_dates)],
                        length.out = length(in_dates)*4 )
@@ -100,8 +104,8 @@ modis_ts <- ts_raster(
 
 ### Part 3: Creating Basic RGB animations
 
-In this step, ts_makeframes is used to create a list of frames (ggplot2 objects) from the time series (raster objects).
-We also add a outline to the plot area. This is one example of adding a position to a time series.
+In this step, `ts_makeframes` is used to create a list of frames (ggplot2 objects) from the time series (raster objects).
+We also add a outline to the plot area. This is one example of adding a *position* to a time series.
 Using pipes is not necessary, but improves readability greatly.  
 
 
@@ -130,11 +134,10 @@ moveVis::animate_frames(modis_frames_RGB_ol,
                         res=75)
 ``` 
 ### Part 4: Customizing frames
-We use ts_add_positions_to_frames to add the positions of points to the frames. These positions can be points or polygons and either sf or sp objects.
 
 The animation created suggests notable vegetation dynamics. An easy way to highlight this is the NDVI.
 
-We calculate the NDVI using the `òverlay` function provided by the raster package, and reattach the timestamps using `ts_copy_frametimes`. Thereby we receive a second time series with a single layer per timestep. Thus, we do not create RGB frames, but gradient frames. 
+We calculate the NDVI using the `overlay` function provided by the raster package, and reattach the timestamps using `ts_copy_frametimes`. Thereby we receive a second time series with a single layer per timestep. Thus, we do not create RGB frames, but gradient frames. 
 
 Note that the individual frames are simply ggplot objects. Hence, moveVis functions and ggplot2 functions can be easily applied to the created frames using lapply. 
 
@@ -150,7 +153,7 @@ modis_ndvi <- modis_ts %>% lapply(function(x){
 # Create the frames from the NDVI raster
 modis_ndvi_fr <-  
   ts_makeframes(x_list = modis_ndvi,
-                hillshade = dem,
+                hillshade = hillshade,
                 r_type = "gradient")
 
 # The frames can be adjusted like any ggplot 
@@ -176,14 +179,14 @@ modis_ndvi_fr_styled <- modis_ndvi_fr %>% lapply(FUN=function(x){
 ```
 
 
-### Part 4: Utilizing positions
+### Part 5: Utilizing positions
 
 `rtsVis` uses vector objects (positions) in two different ways:
 
-* To enhance spatial frames, by adding noteworthy positions, such as test sites.
-* To create flow frames, which are animated plots which visualize the data that is extracted under the positions.
+* To **enhance** spatial frames, by adding noteworthy positions, such as test sites.
+* To **create** flow frames, which are animated plots which visualize the data that is extracted under the positions.
 
-Often, it makes sense to use the two together. In this example, we use (`ts_add_positions_to_frames`) to add several locations as points to our spatial frames . Subsequently, we extract values in a buffer around these locations and create a line chart that visualizes the development of these values over time.
+Often, it makes sense to use the two together. In this example, we use (`ts_add_positions_to_frames`) to add several locations as points to our spatial frames. Subsequently, we extract values in a buffer around these locations and create a line chart that visualizes the development of these values over time.
 
 ``` r
 
