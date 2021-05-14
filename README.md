@@ -281,7 +281,11 @@ modis_ts_densframes <-
 
 # plenty other types and custom plot functions...
 
+<<<<<<< HEAD
 ```
+=======
+``` r
+>>>>>>> 7c6675d1837056c36b87803188392bfdd1175b2a
 It is also possible to create custom plot functions and pass them to `ts_flow_frames`, like this:
 
 ``` r
