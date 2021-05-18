@@ -9,6 +9,7 @@
 #' @param l_indices (Optional) numeric, a vector of layer indices specifying which layers are to be plotted. Should contain 3 values for an RGB image or a single value for a discrete or gradient image. By default, chooses the first three layers if \code{r_type} is \code{"RGB"} and the first layer if \code{r_type} is \code{"discrete"} or \code{"gradient"}.
 #' @param hillshade (Optional) A raster layer. If one is provided, it will be used as the base layer and plotted with \link[RStoolbox]{ggR} while the raster layers from x_list will be plotted over it with a default \code{alpha} of 0.5. By default, no hillshade is used.
 #' @param alpha (Optional) numeric. The opacity of the plot. Default is 1.
+#' @param ... (Optional) further arguments for the plotting.
 #' @return A list of ggplots
 #' @details A linear percent stretch will be applied to each band to improve contrast.
 #' #\deqn{(X - Low_{in}) * \frac{((High_{out}-Low_{out})}{(High_{in}-Low_{in}))}  + Low_{out}}
@@ -83,7 +84,8 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
     
     #transform if necessary
     if(!compareCRS(hillshade,x_list[[1]])){
-      hillshade <- projectRaster(hillshade,x_list[[1]])
+      print("Reprojecting Hillshade")
+      hillshade <- projectRaster(from = hillshade,(x_list[[1]]))
     }
     
     

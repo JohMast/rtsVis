@@ -8,7 +8,10 @@ A lightweight `R` package to visualize large raster time series, building on a f
 rtsVis is linked to the <a href="https://github.com/16EAGLE/moveVis">`moveVis`</a> package and their joint use is recommended.
 
 <img align="right" src="https://github.com/JohMast/rtsVis_demo/blob/main/Images/rtsVis_Logo.png" width="130" height="150" />
+
+
 ## Concepts
+
 
 rtsVis operates on lists of objects:
 
@@ -77,7 +80,7 @@ out_dates <-seq.POSIXt(from = in_dates[1],
 
 For the preparation of the rasters, we use three functions:
 
-* `stack` A `raster` function which we use with `lapply` to load the tifs into a list.
+* `stack` A <a href="https://CRAN.R-project.org/package=raster">`raster`</a> function which we use with `lapply` to load the tifs into a list.
 * `ts_fill_na` We fill, wherever possible, missing values using simple temporal interpolation. This is not strictly necessary, but improves the visualization.
 * `ts_raster` We assemble a full time series. This will interpolate additional missing frames for every desired output date and can take a long time for large time-series. 
 
@@ -98,13 +101,13 @@ modis_ts <- ts_raster(
   r_list = modis_filled,
   r_times = in_dates,
   out_times = out_dates,
-  fade_raster = F) 
+  fade_raster = T) 
 
 ```
 
 ### Part 3: Creating Basic RGB animations
 
-In this step, `ts_makeframes` is used to create a list of frames (ggplot2 objects) from the time series (raster objects).
+In this step, `ts_makeframes` is used to create a list of frames (<a href="https://ggplot2.tidyverse.org/">`ggplot`</a> objects) from the time series (<a href="https://CRAN.R-project.org/package=raster">`raster`</a> objects).
 We also add a outline to the plot area. This is one example of adding a *position* to a time series.
 Using pipes is not necessary, but improves readability greatly.  
 
@@ -137,9 +140,9 @@ moveVis::animate_frames(modis_frames_RGB_ol,
 
 The animation created suggests notable vegetation dynamics. An easy way to highlight this is the NDVI.
 
-We calculate the NDVI using the `overlay` function provided by the raster package, and reattach the timestamps using `ts_copy_frametimes`. Thereby we receive a second time series with a single layer per timestep. Thus, we do not create RGB frames, but gradient frames. 
+We calculate the NDVI using the `overlay` function provided by the <a href="https://CRAN.R-project.org/package=raster">`raster`</a> package, and reattach the timestamps using `ts_copy_frametimes`. Thereby we receive a second time series with a single layer per timestep. Thus, we do not create RGB frames, but gradient frames. 
 
-Note that the individual frames are simply ggplot objects. Hence, moveVis functions and ggplot2 functions can be easily applied to the created frames using lapply. 
+Note that the individual frames are simply <a href="https://ggplot2.tidyverse.org/">`ggplot`</a> objects. Hence, <a href="https://github.com/16EAGLE/moveVis">`moveVis`</a>  functions and <a href="https://ggplot2.tidyverse.org/">`ggplot`</a> functions can be easily applied to the created frames using `lapply`. 
 
 
 
@@ -227,7 +230,7 @@ modis_ndvi_lineframes <-
 ```
 
 Since the positions and the flow frames are thematically connected, it makes sense to combine the two in a single animation.
-For this, we again use moveVis functionalities.
+For this, we again use <a href="https://github.com/16EAGLE/moveVis">`moveVis`</a> functionalities.
 
 ``` r
 #Join and animate the frames using moveVis functionalities
