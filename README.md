@@ -50,6 +50,7 @@ Optional, but useful to enhance the visualizations:
 Some functions in `rtsVis` require that timestamps for the rasters are set. Often, these come with the metadata or can be derived from the filename. They can also be manually set. In this example, we have monthly medians, and no true acquisition time. Therefore, we manually create a series of dates.
 In addition to the input times, we also set output times - for these, output dates will be created. We simply create a second, denser series of dates. Having a denser series will smooth the animation.
 
+If images from the input series are missing, it is not an issue, at least not from the technical side of things. Images for `out_times` will be interpolated regardless of the regularity of the input data. To illustrate this, we remove one of the input images. 
 
 ``` r
 library(raster)
@@ -74,6 +75,10 @@ in_dates <- as.POSIXct(seq.Date(as.Date("2017-01-15"),
 out_dates <-seq.POSIXt(from = in_dates[1],
                        to = in_dates[length(in_dates)],
                        length.out = length(in_dates)*4 )
+                       
+# simulate a missing image
+in_dates <- in_dates[-13]
+modis_tifs <- modis_tifs[-13]
 
 ```
 ### Part 2: Preparing the Rasters
@@ -136,6 +141,9 @@ moveVis::animate_frames(modis_frames_RGB_ol,
                         fps = 10,
                         res=75)
 ``` 
+
+<p align="center"><img src="https://github.com/JohMast/rtsVis_demo/blob/main/Images/modis_frames_RGB_ol.gif"></p>
+
 ### Part 4: Customizing frames
 
 The animation created suggests notable vegetation dynamics. An easy way to highlight this is the NDVI.
@@ -201,8 +209,8 @@ modis_ndvi_fr_styled_pos <-
                              t_hjust = -1.5,
                              tsize = 4,
                              psize=3,
-                             pcol="blue4",
-                             add_text = T)
+                             add_text = T,
+                             col_by_pos = T)
 
 # rtsVis comes with a variety of plotting functions. We select line2 
 # which maps color to position
@@ -218,21 +226,32 @@ modis_ndvi_lineframes <-
                  aes_by_pos = TRUE,
                  position_legend = TRUE) %>%
   
-  # Flow frames too can be adjusted like any ggplot
+  # Flow frames too can be adjusted like any ggplot,
+  # for instance, to set a specific color scale
   lapply(FUN = function(x){
     x+
-      ggtitle("NDVI", "In a 100km radius around the places")+
-      scale_color_brewer("Places",palette = "Dark2")+
+      ggtitle("NDVI", "In a 1° radius around the places")+
       ylab("Median NDVI")+
-      xlab("Month")+
-      scale_x_datetime(labels = months)
+      xlab("Year")+
+      theme(aspect.ratio = 0.3)+
+      scale_color_brewer("Places",palette = "Set1")
   })
 ```
 
 Since the positions and the flow frames are thematically connected, it makes sense to combine the two in a single animation.
 For this, we again use <a href="https://github.com/16EAGLE/moveVis">`moveVis`</a> functionalities.
 
+Before we do that, we make sure that the colors of the points match those in the graph. Again, existing frames can be easily modified using `lapply` and ggplot2 syntax.
+
 ``` r
+# apply the same color palette to the spatial frames
+modis_ndvi_fr_styled_pos <- modis_ndvi_fr_styled_pos %>% lapply(function(x){
+  x+
+    scale_color_brewer("Places",palette = "Set1") 
+})
+  
+  
+
 #Join and animate the frames using moveVis functionalities
 modis_ndvi_joined <- moveVis::join_frames(
   list(modis_ndvi_fr_styled,
@@ -306,14 +325,18 @@ modis_ts_vioframes <-
                  plot_function = custom_plot_function)
 
 ```
-<p align="center"><img src="https://raw.githubusercontent.com/JohMast/rtsVis_demo/main/Images/NDVI_Northern_Europe_joined_pause.gif"></p>
+
+
+
+<p align="center"><img src="https://github.com/JohMast/rtsVis_demo/blob/main/Images/modis_frames_NDVI2.gif"></p>
 
 ## Demo
 
 For more examples, and a guide on how to create custom plot functions, check out the [Demo](https://github.com/JohMast/rtsVis_demo) repository.
 
-In development, published on CRAN. Last updated: `2021-05-14 17:30:00 CEST`
+In development, published on CRAN. Last updated: `2021-05-18 17:30:00 CEST`
 
+<p align="center"><img src="https://raw.githubusercontent.com/JohMast/rtsVis_demo/main/Images/NDVI_Northern_Europe_joined_pause.gif"></p>
 
 ## Links
 
