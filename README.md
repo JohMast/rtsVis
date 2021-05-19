@@ -46,7 +46,7 @@ To process those lists in a pipeline, we recommend pipes such as provided by <a 
 * `ts_add_positions_to_frames` Add points, coordinates, or polygons to a list of spatial plots.
 
 ## Example
-In this example, we use a MODIS timeseries to create typical visualisations which highlight vegetation dynamics on the African continent.
+In this example, we use a MODIS time series <a href="https://td-host.rz.unibw-muenchen.de/btnncfkb/public/Wz3fRVuC?k=1CyESW64ZFybfaSRXaMoiCPCO6qNOx8ctc5FCGg1-Pw">` (download here) `</a>to create typical visualisations which highlight vegetation dynamics on the African continent.
 
 ### Part 1: Preparing the Data
 
