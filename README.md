@@ -9,6 +9,19 @@ rtsVis is linked to the <a href="https://github.com/16EAGLE/moveVis">`moveVis`</
 
 <img align="right" src="https://github.com/JohMast/rtsVis_demo/blob/main/Images/rtsVis_Logo.png" width="130" height="150" />
 
+## Installation
+
+The released version of rtsVis can be installed from CRAN:
+```r
+install.packages("rtsVis")
+```
+
+
+The latest version of the package can be installed from github. 
+
+```r
+devtools::install_github("JohMast/rtsVis")
+```
 
 ## Concepts
 
