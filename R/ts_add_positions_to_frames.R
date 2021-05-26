@@ -18,6 +18,7 @@ crs <-  NULL
 #' @param position_legend_title  (Optional) character, title of the legend. Default is \code{"Position"}.
 #' @param legend_position  (Optional) character, position of the legend. Use \code{"none"} to disable the legend. Default is \code{"right"}
 #' @param aes_by_pos (Optional) logical. If \code{TRUE}: vary some aesthetic (linetype for polygons, shape for points) to be different for each position? If  \code{FALSE}, this also disables the legend, as no notable classes will be plotted. Default is \code{FALSE}. 
+#' @param col_by_pos (Optional) logical. If \code{TRUE}: vary the color to be different for each position? If  \code{TRUE}, overrides \code{aes_by_pos} and {pcol}. Default is \code{FALSE}. 
 #' @param tcol (Optional) character, if \code{add_text}: The color of the text. Default is \code{"red"}.
 #' @param tsize (Optional) numeric, if \code{add_text}: The size of the text. Default is \code{7}.
 #' @param ttype (Optional) character, if \code{add_text}: The type of the text. Either \code{"label"} or \code{"text"}. Default is \code{"text"}.
@@ -129,43 +130,79 @@ crs <-  NULL
 #' #                                                       t_vjust = 1000)
 #' #Look at one of the new frames
 #' # r_frames_style_point_mat[5]
-ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL,pcol="red",tcol="red",psize=2,tsize=7,ttype="text",t_hjust=0,t_vjust=0,position_legend_title = "Position",legend_position="right",aes_by_pos=FALSE,add_text=FALSE){
+ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NULL,pcol="red",tcol="red",psize=2,tsize=7,ttype="text",t_hjust=0,t_vjust=0,position_legend_title = "Position",legend_position="right",aes_by_pos=FALSE,col_by_pos=FALSE,add_text=FALSE){
   
-  if(inherits(positions,"sf")){
-    if(all(sf::st_geometry_type(positions)=="POINT")){
-      data <- positions; data$id <- as.factor(1:nrow(positions))
-      if(is.null(position_names)){
-        position_names <- paste("Point" ,(1:nrow(positions)))
-      }else{
-        position_names <- as.factor(position_names)
+  if(col_by_pos){
+    print("Coloring positions. Ignoring aes_by_pos and pcol arguments.")
+    
+  }
+  
+  if(!col_by_pos){
+    ### Not colored by position ####
+    if(inherits(positions,"sf")){
+      if(all(sf::st_geometry_type(positions)=="POINT")){
+        data <- positions; data$id <- as.factor(1:nrow(positions))
+        if(is.null(position_names)){
+          position_names <- paste("Point" ,(1:nrow(positions)))
+        }else{
+          position_names <- as.factor(position_names)
+        }
+        levels(data$id) <- position_names
+        
+        if(aes_by_pos){
+          outlist <- .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              #ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
+              ggplot2::geom_sf(data = data,mapping = aes( color=pcol,shape=id),size=psize),
+              
+              scale_shape_discrete(name = position_legend_title),
+              theme(legend.position = legend_position),
+              guides(color=FALSE),
+              coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+            )
+          ),data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position,crs=st_crs(positions))     
+        }else{
+          outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              #ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
+              ggplot2::geom_sf(data = data,mapping = aes( color=pcol),size=psize),
+              guides(color=FALSE),
+              coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+              
+            )
+          ),data = data,pcol=pcol,psize=psize,crs=st_crs(positions))
+        }
+      }else if(all(st_geometry_type(positions) %in% c("MULTIPOLYGON", "POLYGON") )){
+        data <- positions; data$id <- as.factor(1:nrow(positions))
+        if(is.null(position_names)){
+          position_names <- paste("Polygon" ,(1:nrow(positions)))
+        }else{
+          position_names <- as.factor(position_names)
+        }
+        levels(data$id) <- position_names
+        
+        if(aes_by_pos){
+          outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              ggplot2::geom_sf(data = data,mapping = aes( color=pcol,linetype=id),size=psize,fill=NA),
+              scale_linetype_discrete(name = position_legend_title),
+              guides(size=FALSE,color=FALSE),
+              theme(legend.position = legend_position),
+              coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+            )
+          ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position,crs=st_crs(positions))
+        }else{
+          outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              ggplot2::geom_sf(data = data,mapping = aes( color=pcol),fill=NA,size=psize),
+              guides(size=FALSE,color=FALSE),
+              coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+            )
+          ), data = data,pcol=pcol,psize=psize,crs=st_crs(positions))
+        }
       }
-      levels(data$id) <- position_names
-      
-      if(aes_by_pos){
-        outlist <- .ts_add_gg(r_frame_list, gg = expr(
-          list(
-            #ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
-            ggplot2::geom_sf(data = data,mapping = aes( color=pcol,shape=id),size=psize),
-            
-            scale_shape_discrete(name = position_legend_title),
-            theme(legend.position = legend_position),
-            guides(color=FALSE),
-            coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
-          )
-        ),data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position,crs=st_crs(positions))     
-      }else{
-        outlist <-  .ts_add_gg(r_frame_list, gg = expr(
-          list(
-            #ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
-            ggplot2::geom_sf(data = data,mapping = aes( color=pcol),size=psize),
-            guides(color=FALSE),
-            coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
-            
-          )
-        ),data = data,pcol=pcol,psize=psize,crs=st_crs(positions))
-      }
-    }else if(all(st_geometry_type(positions) %in% c("MULTIPOLYGON", "POLYGON") )){
-      data <- positions; data$id <- as.factor(1:nrow(positions))
+    }else if(inherits(positions,"SpatialPolygonsDataFrame")){
+      data <-  fortify(positions);data$id <- as.factor(data$id)
       if(is.null(position_names)){
         position_names <- paste("Polygon" ,(1:nrow(positions)))
       }else{
@@ -176,124 +213,269 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
       if(aes_by_pos){
         outlist <-  .ts_add_gg(r_frame_list, gg = expr(
           list(
-            ggplot2::geom_sf(data = data,mapping = aes( color=pcol,linetype=id),size=psize,fill=NA),
+            geom_path(aes(x = long, y = lat,group=group,linetype=id), data = data,colour = pcol,size=psize),
             scale_linetype_discrete(name = position_legend_title),
-            guides(size=FALSE,color=FALSE),
-            theme(legend.position = legend_position),
-            coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+            theme(legend.position = legend_position)
           )
-        ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position,crs=st_crs(positions))
+        ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)
       }else{
         outlist <-  .ts_add_gg(r_frame_list, gg = expr(
           list(
-            ggplot2::geom_sf(data = data,mapping = aes( color=pcol),fill=NA,size=psize),
-            guides(size=FALSE,color=FALSE),
-            coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+            geom_path(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
           )
-        ), data = data,pcol=pcol,psize=psize,crs=st_crs(positions))
+        ), data = data,pcol=pcol,psize=psize)
+      }
+      
+    }else if(inherits(positions,"SpatialPointsDataFrame")){
+      data <-  data.frame(long=positions@coords[,1],lat=positions@coords[,2],group=as.factor(seq(1,nrow(positions))))
+      if(is.null(position_names)){
+        position_names <- paste("Point" ,(1:nrow(positions)))
+      }else{
+        position_names <- as.factor(position_names)
+      }
+      levels(data$group) <- position_names
+      
+      if(aes_by_pos){
+        outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+          list(
+            ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
+            scale_shape_discrete(name = position_legend_title),
+            theme(legend.position = legend_position)
+          )
+        ),data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)     
+      }else{
+        outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+          list(
+            ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
+          )
+        ),data = data,pcol=pcol,psize=psize)
+      }
+      
+    }else if(inherits(positions,c("matrix","array"))){
+      data <- data.frame(long=positions[,1],lat=positions[,2],group=as.factor(seq(1,nrow(positions))))
+      if(is.null(position_names)){
+        position_names <- paste("Point" ,(1:nrow(positions)))
+      }else{
+        position_names <- as.factor(position_names)
+      }
+      levels(data$group) <- position_names
+      if(aes_by_pos){
+        outlist  <-  .ts_add_gg(r_frame_list, gg = expr(
+          list(
+            ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
+            scale_shape_discrete(name = position_legend_title),
+            theme(legend.position = legend_position)
+          )
+        ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)
+      }else{
+        outlist  <-  .ts_add_gg(r_frame_list, gg = expr(
+          list(
+            ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize),
+            scale_shape_discrete(name = position_legend_title),
+            theme(legend.position = legend_position)
+          )
+        ), data = data,pcol=pcol,psize=psize)
+      }
+    }else{
+      print("positions must be an object of sf, sp, or a matrix.")
+    }
+    
+    
+    #Optionally add text of position names in a loop
+    if(add_text){
+      for(i in 1:length(position_names)){
+        if(inherits(positions,c("matrix","array"))){
+          xcord <- (positions[i,])[1]+t_vjust
+          ycord <- (positions[i,])[2]+t_hjust
+        }else if(inherits(positions,"SpatialPolygonsDataFrame")|inherits(positions,"SpatialPointsDataFrame")){
+          xcord <- coordinates(positions[i,])[1]+t_vjust
+          ycord <- coordinates(positions[i,])[2]+t_hjust
+        }else if(inherits(positions,"sf")){
+          xcord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][1]+t_vjust
+          ycord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][2]+t_hjust
+        }
+        outlist <- moveVis::add_text(outlist, as.character(position_names[i]), x =xcord, y = ycord,
+                                     colour = tcol, size = tsize,type = ttype)
       }
     }
-  }else if(inherits(positions,"SpatialPolygonsDataFrame")){
-    data <-  fortify(positions);data$id <- as.factor(data$id)
-    if(is.null(position_names)){
-      position_names <- paste("Polygon" ,(1:nrow(positions)))
-    }else{
-       position_names <- as.factor(position_names)
-    }
-    levels(data$id) <- position_names
     
-    if(aes_by_pos){
-      outlist <-  .ts_add_gg(r_frame_list, gg = expr(
-        list(
-          geom_path(aes(x = long, y = lat,group=group,linetype=id), data = data,colour = pcol,size=psize),
-          scale_linetype_discrete(name = position_legend_title),
-          theme(legend.position = legend_position)
-        )
-      ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)
+    outlist <- .ts_set_frametimes(outlist,.ts_get_frametimes(r_frame_list))
+    
+    
+    return(outlist)
+    
+  
     }else{
-      outlist <-  .ts_add_gg(r_frame_list, gg = expr(
-        list(
-          geom_path(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
-        )
-      ), data = data,pcol=pcol,psize=psize)
-    }
+      
+      ### colored by position ####
+      if(inherits(positions,"sf")){
+        if(all(sf::st_geometry_type(positions)=="POINT")){
+          data <- positions; data$id <- as.factor(1:nrow(positions))
+          if(is.null(position_names)){
+            position_names <- paste("Point" ,(1:nrow(positions)))
+          }else{
+            position_names <- as.factor(position_names)
+          }
+          levels(data$id) <- position_names
+          
+          if(FALSE){
+            outlist <- .ts_add_gg(r_frame_list, gg = expr(
+              list(
+                #ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
+                ggplot2::geom_sf(data = data,mapping = aes( color=pcol,shape=id),size=psize),
+                
+                scale_shape_discrete(name = position_legend_title),
+                theme(legend.position = legend_position),
+                guides(color=FALSE),
+                coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+              )
+            ),data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position,crs=st_crs(positions))     
+          }else{
+            outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+              list(
+                #ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
+                ggplot2::geom_sf(data = data,mapping = aes( color=id),size=psize),
+                guides(color=FALSE),
+                coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+                
+              )
+            ),data = data,pcol=pcol,psize=psize,crs=st_crs(positions))
+          }
+        }else if(all(st_geometry_type(positions) %in% c("MULTIPOLYGON", "POLYGON") )){
+          data <- positions; data$id <- as.factor(1:nrow(positions))
+          if(is.null(position_names)){
+            position_names <- paste("Polygon" ,(1:nrow(positions)))
+          }else{
+            position_names <- as.factor(position_names)
+          }
+          levels(data$id) <- position_names
+          
+          if(FALSE){
+            outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+              list(
+                ggplot2::geom_sf(data = data,mapping = aes( color=pcol,linetype=id),size=psize,fill=NA),
+                scale_linetype_discrete(name = position_legend_title),
+                guides(size=FALSE,color=FALSE),
+                theme(legend.position = legend_position),
+                coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+              )
+            ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position,crs=st_crs(positions))
+          }else{
+            outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+              list(
+                ggplot2::geom_sf(data = data,mapping = aes( color=id),fill=NA,size=psize),
+                guides(size=FALSE,color=FALSE),
+                coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
+              )
+            ), data = data,pcol=pcol,psize=psize,crs=st_crs(positions))
+          }
+        }
+      }else if(inherits(positions,"SpatialPolygonsDataFrame")){
+        data <-  fortify(positions);data$id <- as.factor(data$id)
+        if(is.null(position_names)){
+          position_names <- paste("Polygon" ,(1:nrow(positions)))
+        }else{
+          position_names <- as.factor(position_names)
+        }
+        levels(data$id) <- position_names
         
-  }else if(inherits(positions,"SpatialPointsDataFrame")){
-    data <-  data.frame(long=positions@coords[,1],lat=positions@coords[,2],group=as.factor(seq(1,nrow(positions))))
-    if(is.null(position_names)){
-      position_names <- paste("Point" ,(1:nrow(positions)))
-    }else{
-      position_names <- as.factor(position_names)
-    }
-    levels(data$group) <- position_names
-    
-    if(aes_by_pos){
-      outlist <-  .ts_add_gg(r_frame_list, gg = expr(
-        list(
-          ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
-          scale_shape_discrete(name = position_legend_title),
-          theme(legend.position = legend_position)
-        )
-      ),data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)     
-    }else{
-      outlist <-  .ts_add_gg(r_frame_list, gg = expr(
-        list(
-          ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
-        )
-      ),data = data,pcol=pcol,psize=psize)
-    }
-
-  }else if(inherits(positions,c("matrix","array"))){
-    data <- data.frame(long=positions[,1],lat=positions[,2],group=as.factor(seq(1,nrow(positions))))
-    if(is.null(position_names)){
-      position_names <- paste("Point" ,(1:nrow(positions)))
-    }else{
-      position_names <- as.factor(position_names)
-    }
-    levels(data$group) <- position_names
-    if(aes_by_pos){
-      outlist  <-  .ts_add_gg(r_frame_list, gg = expr(
-        list(
-          ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
-          scale_shape_discrete(name = position_legend_title),
-          theme(legend.position = legend_position)
-        )
-      ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)
-    }else{
-      outlist  <-  .ts_add_gg(r_frame_list, gg = expr(
-        list(
-          ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize),
-          scale_shape_discrete(name = position_legend_title),
-          theme(legend.position = legend_position)
-        )
-      ), data = data,pcol=pcol,psize=psize)
-    }
-  }else{
-    print("positions must be an object of sf, sp, or a matrix.")
-  }
-  
-  
-  #Optionally add text of position names in a loop
-  if(add_text){
-    for(i in 1:length(position_names)){
-      if(inherits(positions,c("matrix","array"))){
-        xcord <- (positions[i,])[1]+t_vjust
-        ycord <- (positions[i,])[2]+t_hjust
-      }else if(inherits(positions,"SpatialPolygonsDataFrame")|inherits(positions,"SpatialPointsDataFrame")){
-        xcord <- coordinates(positions[i,])[1]+t_vjust
-        ycord <- coordinates(positions[i,])[2]+t_hjust
-      }else if(inherits(positions,"sf")){
-        xcord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][1]+t_vjust
-        ycord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][2]+t_hjust
+        if(FALSE){
+          outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              geom_path(aes(x = long, y = lat,group=group,linetype=id), data = data,colour = pcol,size=psize),
+              scale_linetype_discrete(name = position_legend_title),
+              theme(legend.position = legend_position)
+            )
+          ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)
+        }else{
+          outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              geom_path(aes(x = long, y = lat,group=group,color=id), data = data,size=psize)
+            )
+          ), data = data,pcol=pcol,psize=psize)
+        }
+        
+      }else if(inherits(positions,"SpatialPointsDataFrame")){
+        data <-  data.frame(long=positions@coords[,1],lat=positions@coords[,2],group=as.factor(seq(1,nrow(positions))))
+        if(is.null(position_names)){
+          position_names <- paste("Point" ,(1:nrow(positions)))
+        }else{
+          position_names <- as.factor(position_names)
+        }
+        levels(data$group) <- position_names
+        
+        if(FALSE){
+          outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
+              scale_shape_discrete(name = position_legend_title),
+              theme(legend.position = legend_position)
+            )
+          ),data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)     
+        }else{
+          outlist <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              ggplot2::geom_point(aes(x = long, y = lat,group=group,color=id), data = data,size=psize)
+            )
+          ),data = data,pcol=pcol,psize=psize)
+        }
+        
+      }else if(inherits(positions,c("matrix","array"))){
+        data <- data.frame(long=positions[,1],lat=positions[,2],group=as.factor(seq(1,nrow(positions))))
+        if(is.null(position_names)){
+          position_names <- paste("Point" ,(1:nrow(positions)))
+        }else{
+          position_names <- as.factor(position_names)
+        }
+        levels(data$group) <- position_names
+        if(FALSE){
+          outlist  <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
+              scale_shape_discrete(name = position_legend_title),
+              theme(legend.position = legend_position)
+            )
+          ), data = data,pcol=pcol,psize=psize,position_legend_title=position_legend_title,legend_position=legend_position)
+        }else{
+          outlist  <-  .ts_add_gg(r_frame_list, gg = expr(
+            list(
+              ggplot2::geom_point(aes(x = long, y = lat,color=id,group=group), data = data,size=psize),
+              scale_shape_discrete(name = position_legend_title),
+              theme(legend.position = legend_position)
+            )
+          ), data = data,pcol=pcol,psize=psize)
+        }
+      }else{
+        print("positions must be an object of sf, sp, or a matrix.")
       }
-      outlist <- moveVis::add_text(outlist, as.character(position_names[i]), x =xcord, y = ycord,
-                      colour = tcol, size = tsize,type = ttype)
-    }
+      
+      
+      #Optionally add text of position names in a loop
+      if(add_text){
+        for(i in 1:length(position_names)){
+          if(inherits(positions,c("matrix","array"))){
+            xcord <- (positions[i,])[1]+t_vjust
+            ycord <- (positions[i,])[2]+t_hjust
+          }else if(inherits(positions,"SpatialPolygonsDataFrame")|inherits(positions,"SpatialPointsDataFrame")){
+            xcord <- coordinates(positions[i,])[1]+t_vjust
+            ycord <- coordinates(positions[i,])[2]+t_hjust
+          }else if(inherits(positions,"sf")){
+            xcord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][1]+t_vjust
+            ycord <- st_coordinates(st_centroid(st_geometry(positions)))[i,][2]+t_hjust
+          }
+          outlist <- moveVis::add_text(outlist, as.character(position_names[i]), x =xcord, y = ycord,
+                                       colour = tcol, size = tsize,type = ttype)
+        }
+      }
+      
+      outlist <- .ts_set_frametimes(outlist,.ts_get_frametimes(r_frame_list))
+      
+      
+      return(outlist)
+      
+      
   }
-  
-  outlist <- .ts_set_frametimes(outlist,.ts_get_frametimes(r_frame_list))
-  
-  
-return(outlist)
 
+  
+  
 }

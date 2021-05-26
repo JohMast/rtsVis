@@ -87,7 +87,7 @@ ts_makeframes <- function(x_list,r_type = NULL,minq = 0.02,maxq = 0.98,samplesiz
       print("Reprojecting Hillshade")
       hillshade <- projectRaster(from = hillshade,(x_list[[1]]))
     }
-    
+    hillshade <- crop(hillshade,x_list[[1]])
     
     # make a hillshade annotation layer
     hillshade_layer <- RStoolbox::ggR(hillshade,ggLayer = TRUE)

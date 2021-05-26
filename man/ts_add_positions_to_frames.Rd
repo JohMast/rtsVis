@@ -18,6 +18,7 @@ ts_add_positions_to_frames(
   position_legend_title = "Position",
   legend_position = "right",
   aes_by_pos = FALSE,
+  col_by_pos = FALSE,
   add_text = FALSE
 )
 }
@@ -52,6 +53,8 @@ ts_add_positions_to_frames(
 \item{legend_position}{(Optional) character, position of the legend. Use \code{"none"} to disable the legend. Default is \code{"right"}}
 
 \item{aes_by_pos}{(Optional) logical. If \code{TRUE}: vary some aesthetic (linetype for polygons, shape for points) to be different for each position? If  \code{FALSE}, this also disables the legend, as no notable classes will be plotted. Default is \code{FALSE}.}
+
+\item{col_by_pos}{(Optional) logical. If \code{TRUE}: vary the color to be different for each position? If  \code{TRUE}, overrides \code{aes_by_pos} and {pcol}. Default is \code{FALSE}.}
 
 \item{add_text}{(Optional) logical.  If \code{TRUE}: add a text to each position using \link[moveVis]{add_text}.  Default is \code{"False"}.}
 }

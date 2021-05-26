@@ -43,6 +43,7 @@
 #' @importFrom grDevices hcl.colors
 #' @importFrom graphics frame
 #' @importFrom dplyr left_join group_size group_by
+#' @importFrom forcats as_factor
 #' @importFrom stats density filter
 #' @importFrom magrittr %>%
 #' @importFrom tidyr drop_na
@@ -204,6 +205,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
   
   #For most plots we need the data in long format
   if(TRUE){
+    extract_df$position_name <- forcats::as_factor(extract_df$position_name)
     extract_df <-  tidyr::pivot_longer(data = extract_df, cols =  band_names,names_to="band") 
   }
   #Make a df to match colors to band names
@@ -221,6 +223,7 @@ ts_flow_frames <- function(r_list,positions=NULL,position_names=NULL,band_names=
     #Else make the sequence by the given vals
     val_seq <- seq(val_min, val_max, by = val_by)
   }
+  
   
   if(return_df){
     return(extract_df)
