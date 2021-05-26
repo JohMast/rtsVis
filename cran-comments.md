@@ -1,16 +1,13 @@
 ## Submission of new version
-This is a submission of the version 0.0.2 of rtsVis. Compared to the previous version 0.0.1, and in response to the comment of Kurt Hornik, in this version I have made the following changes:
+This is a submission of the version 0.0.3 of rtsVis. 
 
-* ts_flow_frames: Replaced non-standard unicode characters in examples.
-* ts_add_positions_to_frames: Replaced non-standard unicode characters in examples.
-* ts_fill_na: Fixed bug resulting in incorrect masking.
-* README.md: Corrected link to cran raster webpage.
+This release adds new plot types and includes major bug fixes.
 
 ## Test environments
-* local ubuntu 20.04, R 4.0.2
+* local windows 10, R 4.0.3
 * win-builder R version 4.0.5
 * win-builder R Under development (unstable) (2021-04-05 r80144)
-
+* local ubuntu 20.04, R 4.0.2
 ## R CMD check results
 
 There were no ERRORs, WARNINGs or NOTEs
