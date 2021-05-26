@@ -153,7 +153,7 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
           outlist <- .ts_add_gg(r_frame_list, gg = expr(
             list(
               #ggplot2::geom_point(aes(x = long, y = lat,group=group,shape=group), data = data,colour = pcol,size=psize),
-              ggplot2::geom_sf(data = data,mapping = aes( color=pcol,shape=id),size=psize),
+              ggplot2::geom_sf(data = data,mapping = aes( shape=id),color=pcol,size=psize),
               
               scale_shape_discrete(name = position_legend_title),
               theme(legend.position = legend_position),
@@ -165,7 +165,7 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
           outlist <-  .ts_add_gg(r_frame_list, gg = expr(
             list(
               #ggplot2::geom_point(aes(x = long, y = lat,group=group), data = data,colour = pcol,size=psize)
-              ggplot2::geom_sf(data = data,mapping = aes( color=pcol),size=psize),
+              ggplot2::geom_sf(data = data,mapping = aes( ),color=pcol,size=psize),
               guides(color=FALSE),
               coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
               
@@ -184,7 +184,7 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
         if(aes_by_pos){
           outlist <-  .ts_add_gg(r_frame_list, gg = expr(
             list(
-              ggplot2::geom_sf(data = data,mapping = aes( color=pcol,linetype=id),size=psize,fill=NA),
+              ggplot2::geom_sf(data = data,mapping = aes(linetype=id),color=pcol,size=psize,fill=NA),
               scale_linetype_discrete(name = position_legend_title),
               guides(size=FALSE,color=FALSE),
               theme(legend.position = legend_position),
@@ -194,7 +194,7 @@ ts_add_positions_to_frames <- function(r_frame_list,positions,position_names=NUL
         }else{
           outlist <-  .ts_add_gg(r_frame_list, gg = expr(
             list(
-              ggplot2::geom_sf(data = data,mapping = aes( color=pcol),fill=NA,size=psize),
+              ggplot2::geom_sf(data = data,mapping = aes(),color=pcol,fill=NA,size=psize),
               guides(size=FALSE,color=FALSE),
               coord_sf(datum=crs)#necessary because geom_sf defaults to latlong otherwise
             )

@@ -210,20 +210,24 @@ modis_ndvi_fr_styled <- modis_ndvi_fr %>% lapply(FUN=function(x){
 * To **enhance** spatial frames, by adding noteworthy positions, such as test sites.
 * To **create** flow frames, which are animated plots which visualize the data that is extracted under the positions.
 
-Often, it makes sense to use the two together. In this example, we use (`ts_add_positions_to_frames`) to add several locations as points to our spatial frames. Subsequently, we extract values in a buffer around these locations and create a line chart that visualizes the development of these values over time.
+Sometimes, adding a position is for visual appeal only, as we do here by adding an outline to the continents. 
+But often, it makes sense to use the two together. In this example, we use (`ts_add_positions_to_frames`) to add several locations as points to our spatial frames. Subsequently, we extract values in a buffer around these locations and create a line chart that visualizes the development of these values over time.
+
 
 ``` r
+#reduce the number of points slightly
 
 modis_ndvi_fr_styled_pos <- 
   modis_ndvi_fr_styled  %>% 
+  ts_add_positions_to_frames(outline,pcol = "white",psize = 1) %>% 
   ts_add_positions_to_frames(positions = points,
                              position_names = points$Name,
                              tcol = "blue4",
                              t_hjust = -1.5,
                              tsize = 4,
                              psize=3,
-                             add_text = T,
-                             col_by_pos = T)
+                             pcol="blue4",
+                             add_text = T,col_by_pos = T)
 
 # rtsVis comes with a variety of plotting functions. We select line2 
 # which maps color to position
