@@ -9,6 +9,9 @@ This release adds new plot types and includes major bug fixes.
 * win-builder R Under development (unstable) (2021-04-05 r80144)
 * local ubuntu 20.04, R 4.0.2
 * Github actions Mac OS X 10.15.7
+
+=======
+
 ## R CMD check results
 
 There were no ERRORs, WARNINGs or NOTEs
