@@ -4,7 +4,7 @@
 \alias{ts_fill_na}
 \title{Fill NA values in a raster time series}
 \usage{
-ts_fill_na(x_list_fill, maskvalues = NULL, verbose = FALSE, ...)
+ts_fill_na(x_list_fill, maskvalues = NULL, verbose = FALSE, rule = 1, ...)
 }
 \arguments{
 \item{x_list_fill}{a list of raster objects.}
@@ -12,6 +12,8 @@ ts_fill_na(x_list_fill, maskvalues = NULL, verbose = FALSE, ...)
 \item{maskvalues}{numeric, a vector of values to be set to NA before the masking.}
 
 \item{verbose}{(Optional) logical. If \code{TRUE} outputs progress. Default is \code{FALSE}.}
+
+\item{rule}{for the interpolation in first and last images.  If rule is 1 then NAs are returned for such points and if it is 2, the value at the closest data extreme is used. Use, e.g., rule = 2:1, if the left and right side extrapolation should differ. See \link[raster]{approxNA}.}
 
 \item{...}{additional arguments to be passed on to  \link[raster]{approxNA}. Of particular interest is the \code{rule} argument which defines how first and last cells are dealt with.}
 }
