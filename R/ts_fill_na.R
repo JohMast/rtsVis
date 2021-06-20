@@ -31,7 +31,7 @@ ts_fill_na <- function(x_list_fill,maskvalues=NULL,verbose=FALSE,rule=2,...){
     }
     #make a brick from all the layers
     if(n_layers>1){
-      x_lay <- stack( rtsVis:::.ts_subset_ts_util(x_list_fill,n_l) )
+      x_lay <- stack(.ts_subset_ts_util(x_list_fill,n_l) )
     }else{
       x_lay <- stack(x_list_fill)
     }
