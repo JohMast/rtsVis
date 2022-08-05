@@ -6,7 +6,7 @@
 #' @param maskvalues numeric, a vector of values to be set to NA before the masking.
 #' @param rule for the interpolation in first and last images.  If rule is 1 then NAs are returned for such points and if it is 2, the value at the closest data extreme is used. Use, e.g., rule = 2:1, if the left and right side extrapolation should differ. See \link[raster]{approxNA}. Default is 2.
 #' @return A list of rasters with NAs filled.
-#' @importFrom raster approxNA as.list
+#' @importFrom raster approxNA as.list nlayers names stack
 #' @author Johannes Mast
 #' @details Loads all layers of a specific bands into a stack and uses \link[raster]{approxNA} to fill the NAs if possible. Note that the procedure requires the entire list of raster layery for each band to be be stacked. It is therefore very memory intensive and likely to fail for very large time series.
 #' @export
