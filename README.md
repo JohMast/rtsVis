@@ -1,7 +1,7 @@
 # `rtsVis`
 [![CRAN version](https://www.r-pkg.org/badges/version/rtsVis)](https://CRAN.R-project.org/package=rtsVis)
 [![CRAN downloads](https://cranlogs.r-pkg.org/badges/last-month/rtsVis?color=brightgreen)](https://CRAN.R-project.org/package=rtsVis)
-[![CRAN checks](https://cranchecks.info/badges/summary/rtsVis)](https://cran.r-project.org/web/checks/check_results_rtsVis.html)
+<!---[![CRAN checks](https://cranchecks.info/badges/summary/rtsVis)](https://cran.r-project.org/web/checks/check_results_rtsVis.html)-->
 <!---[![R-CMD-check](https://github.com/JohMast/rtsVis/workflows/R-CMD-check/badge.svg)](https://github.com/JohMast/rtsVis/actions)-->
 
 
